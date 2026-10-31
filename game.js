@@ -115,7 +115,7 @@ function applySoldier(target,entity){
  for(const clip of soldierAnimations){const action=entity.mixer.clipAction(clip);entity.actions[clip.name.toLowerCase()]=action;}
  const idle=Object.keys(entity.actions).find(n=>n.includes('idle'))||Object.keys(entity.actions)[0];
  if(idle)entity.actions[idle].play();
- entity.currentAction=idle;
+ entity.currentAction=idle;target.userData.currentAction=idle;
 }
 function setSoldierAction(entity,kind){
  if(!entity.actions)return;
