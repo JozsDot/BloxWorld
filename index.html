@@ -14,6 +14,19 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="boot-screen" id="bootScreen" role="status" aria-label="Cargando BloxShoot">
+  <div class="boot-grid"></div><div class="boot-glow"></div>
+  <div class="boot-content">
+    <div class="boot-emblem"><span>B</span><i></i></div>
+    <div class="boot-kicker">TACTICAL COMBAT EXPERIENCE</div>
+    <div class="boot-logo">BLOX<span>SHOOT</span></div>
+    <div class="boot-season">BATTLE ARENA <b>•</b> SEASON 01</div>
+    <div class="boot-progress"><span></span></div>
+    <div class="boot-status"><span>INICIALIZANDO CAMPO DE BATALLA</span><b>V28</b></div>
+    <div class="boot-footer">PREPARANDO EQUIPO <i>·</i> CARGANDO ENTORNO</div>
+  </div>
+  <div class="boot-corner boot-corner-left">BS / 001</div><div class="boot-corner boot-corner-right">ONLINE READY</div>
+</div>
 <header class="topbar" id="lobbyHeader">
   <a class="brand" href="#" aria-label="BloxWorld inicio"><span class="brand-cube">B</span><span>BLOX<em>SHOOT</em></span></a>
   <div class="top-actions"><div class="wallet">◆ <b id="coinCount">500</b><small> BB</small></div><button class="icon-button" id="shopOpen" aria-label="Abrir tienda">♜ <span>TIENDA</span></button></div>
@@ -101,6 +114,9 @@
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>window.BLOXSHOOT_SERVER_URL="https://bloxworld.prbzc46428.workers.dev";</script>
-<script src="game.js?v=27" defer></script>
+<script src="game.js?v=28" defer></script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}</script>
+<script>
+(()=>{const boot=document.getElementById('bootScreen');const hide=()=>{if(!boot)return;boot.classList.add('boot-hidden');setTimeout(()=>boot.remove(),650)};if(document.readyState==='complete')setTimeout(hide,1900);else window.addEventListener('load',()=>setTimeout(hide,1900),{once:true});setTimeout(hide,6500)})();
+</script>
 </body></html>
