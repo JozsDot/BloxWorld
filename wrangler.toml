@@ -1,4 +1,4 @@
-name = "bloxshoot-multiplayer"
+name = "bloxworld"
 main = "server/worker.js"
 compatibility_date = "2026-10-31"
 
