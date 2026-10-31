@@ -34,3 +34,33 @@ body{background:radial-gradient(ellipse at 50% -20%,#344b7c 0,#10182b 48%,#080d1
 .start-card small{display:block;margin-top:13px;color:#91a8c8;font-size:9px;letter-spacing:2px}
 .start-screen.hidden{display:none}
 @media(max-width:600px){.hero{padding-top:27px}.hero h1{font-size:37px}.game-shell{border-radius:17px}.viewport{height:390px}.start-card{padding:18px 14px}.start-card h2{font-size:31px}.game-bottom{padding:12px 10px}.action-controls{width:100%}.action-btn{min-height:43px}}
+
+/* Lobby separado del modo de juego, estilo battle royale */
+[hidden]{display:none!important}
+.lobby-screen{margin:0 0 22px}
+.lobby-art{height:clamp(360px,66vw,530px);position:relative;overflow:hidden;border:1px solid #617da5;border-radius:23px;background:linear-gradient(180deg,#edb66d 0%,#d98d53 48%,#744b3d 100%);box-shadow:0 24px 65px #0008}
+.lobby-art:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#111a2be8 0%,#111a2b99 46%,#111a2b15 100%),linear-gradient(0deg,#17172c99,transparent 60%)}
+.lobby-sun{position:absolute;width:85px;height:85px;border-radius:50%;background:#ffe2a0;box-shadow:0 0 65px 24px #ffe0a055;right:17%;top:14%}
+.lobby-pyramid{position:absolute;bottom:-8px;width:0;height:0;border-left:clamp(100px,19vw,190px) solid transparent;border-right:clamp(100px,19vw,190px) solid transparent;border-bottom:clamp(180px,34vw,330px) solid #9e6947;filter:drop-shadow(0 12px 12px #37231f66)}
+.pyramid-one{right:5%;border-bottom-color:#996244}
+.pyramid-two{right:30%;transform:scale(.72);transform-origin:bottom;border-bottom-color:#b77b4e}
+.pyramid-three{right:-12%;transform:scale(.52);transform-origin:bottom;border-bottom-color:#80523f}
+.lobby-copy{position:absolute;z-index:1;left:clamp(18px,5vw,55px);top:50%;transform:translateY(-50%);max-width:490px}
+.lobby-copy h2{font-size:clamp(34px,7vw,64px);line-height:.94;letter-spacing:-2px;margin:12px 0;text-shadow:0 5px 20px #0006}
+.lobby-copy h2 em{font-style:normal;color:#8deaff}
+.lobby-copy p{font-size:14px;color:#e3eaf7;max-width:310px;line-height:1.5}
+.lobby-copy .play-button{margin-top:12px;width:230px}
+.lobby-season{position:absolute;right:18px;bottom:16px;color:#fff;font-size:10px;letter-spacing:2px;font-weight:900;text-shadow:0 2px 8px #000}
+.lobby-season b{color:#8deaff;padding:0 6px}
+.lobby-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:13px}
+.queue-card{display:flex;align-items:center;gap:12px;padding:14px;background:linear-gradient(145deg,#1b2a45,#111b30);border:1px solid #344967;border-radius:14px;min-width:0}
+.queue-icon{font-size:25px}
+.queue-card div{min-width:0;flex:1}
+.queue-card strong,.queue-card small{display:block}
+.queue-card strong{font-size:11px;letter-spacing:.7px}
+.queue-card small{font-size:10px;color:#9cacc8;margin-top:4px}
+.queue-ready{font-size:8px;letter-spacing:1px;color:#8df0c0;font-weight:900}
+.back-lobby{border:1px solid #526b91;border-radius:8px;background:#263654;color:white;padding:7px 10px;font-size:10px;font-weight:900}
+#gameScreen[hidden],#lobbyScreen[hidden],#lobbyHero[hidden]{display:none!important}
+#gameScreen{margin-bottom:24px}
+@media(max-width:600px){.lobby-art{height:410px;border-radius:17px}.lobby-pyramid{border-left-width:125px;border-right-width:125px;border-bottom-width:220px}.pyramid-two{right:24%}.lobby-copy{left:19px;right:14px}.lobby-copy h2{font-size:40px}.lobby-options{grid-template-columns:1fr}.queue-card{padding:12px}.queue-ready{font-size:7px}}
