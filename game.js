@@ -59,7 +59,7 @@ function addBot(x,z,index){
 }
 function clearWorld(){
  if(worldGroup){scene.remove(worldGroup);worldGroup.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
- worldGroup=new THREE.Group();scene.add(worldGroup);bots=[];colliders=[];
+ worldGroup=new THREE.Group();scene.add(worldGroup);bots=[];colliders=[];projectiles=[];
 }
 function buildWorld(){
  clearWorld();
@@ -107,7 +107,7 @@ function updateProjectiles(dt){
  for(let i=projectiles.length-1;i>=0;i--){
   const p=projectiles[i],step=Math.min(p.speed*dt,p.remaining),origin=p.mesh.position.clone();
   raycaster.set(origin,p.direction);raycaster.far=step+.12;
-  const hits=raycaster.intersectObjects(worldGroup.children,true);
+  const hits=raycaster.intersectObjects(worldGroup.children.filter(o=>o!==p.mesh),true);
   let hitPoint=null,hitBot=null;
   if(hits.length){hitPoint=hits[0].point;let root=hits[0].object;while(root.parent&&root.parent!==worldGroup)root=root.parent;hitBot=bots.find(b=>b.group===root&&b.alive)||null;}
   if(hitPoint){p.mesh.position.copy(hitPoint);if(hitBot){hitBot.alive=false;hitBot.group.visible=false;coins+=25;updateCoins();setMessage('IMPACTO · BOT ELIMINADO +25 BB')}else setMessage('IMPACTO');}
