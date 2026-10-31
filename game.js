@@ -146,9 +146,9 @@ function addSkyDome(desert,city){
  for(let i=0;i<pos.count;i++){const t=THREE.MathUtils.smoothstep(pos.getY(i),-8,42);const c=horizon.clone().lerp(top,t);colors.push(c.r,c.g,c.b)}
  geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
  const sky=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,depthWrite:false,fog:false}));
- sky.position.y=5;sky.renderOrder=-1;worldGroup.add(sky);
+ sky.position.y=5;sky.renderOrder=-1;sky.raycast=()=>{};worldGroup.add(sky);
  const sun=new THREE.Mesh(new THREE.SphereGeometry(4.2,20,16),new THREE.MeshBasicMaterial({color:desert?0xffe0ad:0xf2f5ed}));
- sun.position.set(-52,48,-118);worldGroup.add(sun);
+ sun.position.set(-52,48,-118);sun.raycast=()=>{};worldGroup.add(sun);
 }
 function addDistantLandmarks(desert,city){
  const rockMat=mat(desert?0x80634e:city?0x344554:0x47634b),farMat=mat(desert?0xa77d5b:city?0x405568:0x56745c);
