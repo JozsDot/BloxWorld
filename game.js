@@ -19,7 +19,7 @@ const weaponData=[
 let player={x:0,z:18};
 let joy={x:0,y:0,id:null},look={id:null,x:0,y:0};
 let bots=[],botMeshes=[],keys={},colliders=[];
-let playerHealth=100;
+let playerHealth=100,recoil=0,walkTime=0;
 const raycaster=new THREE.Raycaster();
 const materials={};
 function mat(color,roughness=1){const key=color+'_'+roughness;if(!materials[key])materials[key]=new THREE.MeshStandardMaterial({color,roughness,metalness:0.02});return materials[key]}
@@ -165,7 +165,7 @@ canvas.addEventListener('pointermove',e=>{if(e.pointerId!==look.id)return;const 
 window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key===' ')e.preventDefault()});
 window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 function shoot(){
- if(!playing)return;const w=weaponData.find(a=>a.name===slots[weaponSlot])||weaponData[0],now=performance.now();if(now-lastShot<w.rate)return;lastShot=now;
+ if(!playing)return;const w=weaponData.find(a=>a.name===slots[weaponSlot])||weaponData[0],now=performance.now();if(now-lastShot<w.rate)return;lastShot=now;recoil=Math.min(.12,recoil+.035);
  if(w.kind==='knife'){let hit=null,dist=3.2;for(const b of bots){if(!b.alive)continue;const d=Math.hypot(b.x-player.x,b.z-player.z);if(d<dist) {const dx=b.x-player.x,dz=b.z-player.z,a=Math.abs(Math.atan2(-dx,-dz)-yaw);if(a<.75){hit=b;dist=d}}}if(hit){hit.alive=false;hit.group.visible=false;coins+=25;updateCoins();setMessage('ELIMINACIÓN +25 BB')}else setMessage('ACÉRCATE AL RIVAL');return}
  raycaster.setFromCamera(new THREE.Vector2(0,0),camera);
  const hits=raycaster.intersectObjects(bots.filter(b=>b.alive).map(b=>b.group),true);
@@ -174,6 +174,7 @@ function shoot(){
 function collidesAt(x,z){
  const r=.43;
  if(x < -58+r || x > 58-r || z < -112+r || z > 26-r) return true;
+ for(const b of bots){if(b.alive&&Math.hypot(x-b.x,z-b.z)<.88)return true;}
  for(const c of colliders){
   const px=Math.max(c.minX,Math.min(x,c.maxX)),pz=Math.max(c.minZ,Math.min(z,c.maxZ));
   const dx=x-px,dz=z-pz;
@@ -216,7 +217,8 @@ function animate(){
   moveWithCollision(dx,dz);
   jumpV-=16*dt;playerY+=jumpV*dt;if(playerY<1.7){playerY=1.7;jumpV=0}
   const targetY=crouch?1.05:1.7;playerY+=(targetY-playerY)*Math.min(1,dt*12);
-  camera.position.set(player.x,playerY,player.z);camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);
+  const moving=Math.hypot(f,s)>.08;walkTime+=moving?dt*(run?13:8):0;
+  camera.position.set(player.x,playerY+(moving?Math.sin(walkTime)*.025:0),player.z);camera.rotation.order='YXZ';camera.rotation.set(pitch+recoil,yaw,0);recoil=Math.max(0,recoil-dt*.24);
   if(weaponGroup){weaponGroup.position.y=-.48+(inspect?Math.sin((1-inspect)*Math.PI)*.3:0);weaponGroup.rotation.z=inspect?Math.sin((1-inspect)*Math.PI)*.7:0}
   if(inspect>0)inspect=Math.max(0,inspect-dt*1.6);
   updateBots(dt);
