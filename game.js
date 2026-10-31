@@ -20,17 +20,20 @@ function resize(){
 }
 window.addEventListener('resize',resize);
 function enterGame(){
+ try {
  playing=true;run=false;crouch=false;player={x:0,z:18,yaw:0,pitch:0};jumpPower=0;
  targets=savedBots.map((p,i)=>({x:p[0],z:p[1],alive:true,id:i}));
  $('runBtn').classList.remove('active');$('crouchBtn').classList.remove('active');
  $('lobbyHeader').hidden=true;lobby.hidden=true;gameScreen.hidden=false;
  document.body.style.overflow='hidden';resize();updateCoins();setMessage('Encuentra a los bots. ¡Buena suerte!');
+ } catch(error) { console.error('BloxWorld start error:',error); gameScreen.hidden=false; setMessage('Error al iniciar: '+error.message); }
 }
 function leaveGame(){
  playing=false;joy.x=0;joy.y=0;joy.pointer=null;run=false;crouch=false;
  $('lobbyHeader').hidden=false;lobby.hidden=false;gameScreen.hidden=true;
  document.body.style.overflow='';$('joystickThumb').style.transform='translate(-50%,-50%)';updateCoins();
 }
+window.startBloxWorld=enterGame;
 $('playBtn').addEventListener('click',enterGame);
 $('backLobbyBtn').addEventListener('click',leaveGame);
 $('shopOpen').addEventListener('click',()=>$('shopModal').hidden=false);
@@ -141,7 +144,7 @@ function tick(time){
  if(playing){
   let f=-joy.y,s=joy.x;
   if(keys.w||keys.arrowup)f=1;if(keys.s||keys.arrowdown)f=-1;if(keys.a||keys.arrowleft)s=-1;if(keys.d||keys.arrowright)s=1;
-  const speed=run?.24:.12;
+  const speed=run ? 0.24 : 0.12;
   const mag=Math.hypot(f,s)||1;if(Math.hypot(f,s)>1){f/=mag;s/=mag}
   const forwardX=-Math.sin(player.yaw),forwardZ=-Math.cos(player.yaw),rightX=Math.cos(player.yaw),rightZ=-Math.sin(player.yaw);
   player.x+=(forwardX*f+rightX*s)*speed*(dt*60);player.z+=(forwardZ*f+rightZ*s)*speed*(dt*60);
