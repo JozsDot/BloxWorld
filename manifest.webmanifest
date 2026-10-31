@@ -1,0 +1,16 @@
+{
+  "id": "./",
+  "name": "BloxShoot Battle Arena",
+  "short_name": "BloxShoot",
+  "description": "Entrenamiento de combate 3D en BloxShoot.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#10182b",
+  "theme_color": "#10182b",
+  "icons": [
+    {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+  ]
+}
