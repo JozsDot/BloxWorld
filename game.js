@@ -81,8 +81,7 @@ window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key==='
 function wrapAngle(a){while(a>Math.PI)a-=Math.PI*2;while(a< -Math.PI)a+=Math.PI*2;return a}
 function shoot(){
  if(!playing)return;
- const weapon=currentWeapon();if(weapon.type==='knife'){let near=null,nd=weapon.range;for(const t of targets){if(!t.alive)continue;const d=Math.hypot(t.x-player.x,t.z-player.z),a=Math.abs(wrapAngle(Math.atan2(-(t.x-player.x),-(t.z-player.z))-player.yaw));if(d<nd&&a<.75){near=t;nd=d}}if(near){near.alive=false;coins+=25;updateCoins();setMessage('¡Eliminación cuerpo a cuerpo! +25 BB')}else setMessage('Acércate más para usar el cuchillo');return}
- const now=performance.now();if(now-lastShot<weapon.rate)return;lastShot=now;
+ const weapon=currentWeapon();const now=performance.now();if(now-lastShot<weapon.rate)return;lastShot=now;if(weapon.type==='knife'){let near=null,nd=weapon.range;for(const t of targets){if(!t.alive)continue;const d=Math.hypot(t.x-player.x,t.z-player.z),a=Math.abs(wrapAngle(Math.atan2(-(t.x-player.x),-(t.z-player.z))-player.yaw));if(d<nd&&a<.75){near=t;nd=d}}if(near){near.alive=false;coins+=25;updateCoins();setMessage('¡Eliminación cuerpo a cuerpo! +25 BB')}else setMessage('Acércate más para usar el cuchillo');return}
  let best=null,bestAngle=weapon.type==='sniper'?.10:.18,bestDist=weapon.range;
  for(const t of targets){if(!t.alive)continue;const dx=t.x-player.x,dz=t.z-player.z,dist=Math.hypot(dx,dz),ang=wrapAngle(Math.atan2(-dx,-dz)-player.yaw);
   if(dist<bestDist&&Math.abs(ang)<bestAngle){best=t;bestAngle=Math.abs(ang);bestDist=dist}
