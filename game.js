@@ -19,7 +19,7 @@ const weaponData=[
 let player={x:0,z:18};
 let joy={x:0,y:0,id:null},look={id:null,x:0,y:0};
 let bots=[],botMeshes=[],keys={},colliders=[];
-let playerHealth=100,recoil=0,walkTime=0;
+let playerHealth=100,recoil=0,walkTime=0,slideTimer=0,weaponKick=0,weaponBob=0;
 const raycaster=new THREE.Raycaster();
 const materials={};
 function mat(color,roughness=1){const key=color+'_'+roughness;if(!materials[key])materials[key]=new THREE.MeshStandardMaterial({color,roughness,metalness:0.02});return materials[key]}
@@ -43,17 +43,19 @@ function addPalm(x,z){
 }
 function addBot(x,z,index){
  const g=new THREE.Group();g.position.set(x,0,z);worldGroup.add(g);
- const team=index%2?0x315f91:0x9c4053;
- box(g,0,1.25,0,.82,1.05,.48,team);
- box(g,0,2.05,0,.58,.58,.58,0xc99b79);
- box(g,0,2.25,-.3,.6,.16,.12,0x263648);
- box(g,-.55,1.3,0,.25,.95,.28,team);box(g,.55,1.3,0,.25,.95,.28,team);
- box(g,-.23,.42,0,.28,.84,.34,0x263c57);box(g,.23,.42,0,.28,.84,.34,0x263c57);
- // Fixed face orientation: bots do not rotate toward the player.
- const eyeMat=mat(0x8bdde9,.45);
- const e1=new THREE.Mesh(new THREE.BoxGeometry(.1,.06,.025),eyeMat);e1.position.set(-.14,2.08,-.3);g.add(e1);
- const e2=e1.clone();e2.position.x=.14;g.add(e2);
- bots.push({group:g,alive:true,x,z});
+ const team=index%2?0x315f91:0x9c4053,skin=0xb98263,dark=0x202a35;
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.72,5,8),mat(team));torso.position.y=1.28;torso.castShadow=true;g.add(torso);
+ const vest=new THREE.Mesh(new THREE.CapsuleGeometry(.355,.48,4,8),mat(0x354453));vest.position.set(0,1.34,-.015);vest.castShadow=true;g.add(vest);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.235,12,10),mat(skin));head.position.y=2.02;head.castShadow=true;g.add(head);
+ const helmet=new THREE.Mesh(new THREE.SphereGeometry(.255,12,8,0,Math.PI*2,0,Math.PI*.58),mat(0x34434a));helmet.position.y=2.12;helmet.castShadow=true;g.add(helmet);
+ const faceShield=new THREE.Mesh(new THREE.BoxGeometry(.31,.075,.035),mat(0x182c39,.3));faceShield.position.set(0,2.02,-.21);g.add(faceShield);
+ const limbs=[];
+ function limb(px,py,pz,len,r,color){const pivot=new THREE.Group();pivot.position.set(px,py,pz);g.add(pivot);const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(r,len,4,7),mat(color));mesh.position.y=-len*.42;mesh.castShadow=true;pivot.add(mesh);return pivot;}
+ const armL=limb(-.43,1.65,0,.55,.105,team),armR=limb(.43,1.65,0,.55,.105,team);
+ const legL=limb(-.19,.83,0,.68,.14,0x273746),legR=limb(.19,.83,0,.68,.14,0x273746);
+ const bootL=new THREE.Mesh(new THREE.SphereGeometry(.15,8,6),mat(dark));bootL.position.set(-.19,.12,-.08);g.add(bootL);
+ const bootR=bootL.clone();bootR.position.x=.19;g.add(bootR);
+ bots.push({group:g,alive:true,x,z,limbs:[armL,armR,legL,legR],phase:Math.random()*6});
 }
 function clearWorld(){
  if(worldGroup){scene.remove(worldGroup);worldGroup.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
@@ -98,7 +100,7 @@ function makeWeapon(name){
   if(d.kind==='smg')box(g,0,-.14,.22,.16,.32,.2,0x1c2833);
  }
  // A simple forearm/hand anchors the first-person weapon in view.
- box(g,-.13,-.42,.12,.28,.72,.35,0xb77d5d);
+ const sleeve=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.52,4,8),mat(0x354454));sleeve.position.set(-.13,-.4,.12);sleeve.rotation.z=-.12;g.add(sleeve);const glove=new THREE.Mesh(new THREE.SphereGeometry(.14,9,7),mat(0x252d35));glove.position.set(-.12,-.1,-.12);g.add(glove);
  return g;
 }
 function equipWeapon(){
@@ -148,7 +150,7 @@ $('slotTwo').addEventListener('pointerdown',e=>{e.preventDefault();weaponSlot=1;
 document.querySelectorAll('.equip-weapon').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();slots[weaponSlot]=weaponData[Number(b.dataset.weapon)].name;equipWeapon();$('arsenalPanel').hidden=true;setMessage(slots[weaponSlot]+' EQUIPADA')}));
 $('inspectBtn').addEventListener('pointerdown',e=>{e.preventDefault();inspect=1;setMessage('INSPECCIONANDO '+slots[weaponSlot])});
 $('runBtn').addEventListener('pointerdown',e=>{e.preventDefault();run=!run;$('runBtn').classList.toggle('active',run)});
-$('crouchBtn').addEventListener('pointerdown',e=>{e.preventDefault();crouch=!crouch;$('crouchBtn').classList.toggle('active',crouch)});
+$('crouchBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(run&&Math.hypot(joy.x,joy.y)>.12){slideTimer=.78;crouch=true;run=false;$('runBtn').classList.remove('active');setMessage('¡DESLIZAMIENTO!')}else{crouch=!crouch;slideTimer=0}$('crouchBtn').classList.toggle('active',crouch)});
 $('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(playerY<=1.72)jumpV=6.2;$('jumpBtn').classList.add('active');setTimeout(()=>$('jumpBtn').classList.remove('active'),160)});
 $('shootBtn').addEventListener('pointerdown',e=>{e.preventDefault();fireHeld=true;shoot()});
 ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>$('shootBtn').addEventListener(ev,()=>fireHeld=false));
@@ -165,7 +167,7 @@ canvas.addEventListener('pointermove',e=>{if(e.pointerId!==look.id)return;const 
 window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key===' ')e.preventDefault()});
 window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 function shoot(){
- if(!playing)return;const w=weaponData.find(a=>a.name===slots[weaponSlot])||weaponData[0],now=performance.now();if(now-lastShot<w.rate)return;lastShot=now;recoil=Math.min(.12,recoil+.035);
+ if(!playing)return;const w=weaponData.find(a=>a.name===slots[weaponSlot])||weaponData[0],now=performance.now();if(now-lastShot<w.rate)return;lastShot=now;recoil=Math.min(.12,recoil+.035);weaponKick=Math.min(.18,weaponKick+.12);
  if(w.kind==='knife'){let hit=null,dist=3.2;for(const b of bots){if(!b.alive)continue;const d=Math.hypot(b.x-player.x,b.z-player.z);if(d<dist) {const dx=b.x-player.x,dz=b.z-player.z,a=Math.abs(Math.atan2(-dx,-dz)-yaw);if(a<.75){hit=b;dist=d}}}if(hit){hit.alive=false;hit.group.visible=false;coins+=25;updateCoins();setMessage('ELIMINACIÓN +25 BB')}else setMessage('ACÉRCATE AL RIVAL');return}
  raycaster.setFromCamera(new THREE.Vector2(0,0),camera);
  const hits=raycaster.intersectObjects(bots.filter(b=>b.alive).map(b=>b.group),true);
@@ -195,7 +197,7 @@ function updateBots(dt){
  for(const b of bots){
   if(!b.alive)continue;
   const dx=player.x-b.x,dz=player.z-b.z,dist=Math.hypot(dx,dz);
-  b.group.rotation.y=Math.atan2(dx,dz);
+  b.group.rotation.y=Math.atan2(dx,dz);b.phase+=dt*(dist>5.5?8:2);const swing=Math.sin(b.phase)*.62;b.limbs[0].rotation.x=swing;b.limbs[1].rotation.x=-swing;b.limbs[2].rotation.x=-swing;b.limbs[3].rotation.x=swing;
   if(dist>5.5&&dist<34){
    const speed=dist>12?1.25:.55,step=speed*dt,tx=b.x+dx/dist*step,tz=b.z+dz/dist*step;
    if(!collidesAt(tx,tz)){b.x=tx;b.z=tz;b.group.position.set(b.x,0,b.z);}
@@ -211,15 +213,16 @@ function animate(){
   let f=-joy.y,s=joy.x;
   if(keys.w||keys.arrowup)f=1;if(keys.s||keys.arrowdown)f=-1;if(keys.a||keys.arrowleft)s=-1;if(keys.d||keys.arrowright)s=1;
   const len=Math.hypot(f,s)||1;if(len>1){f/=len;s/=len}
-  const speed=crouch?2.0:run?7.4:4.1;
+  const speed=slideTimer>0?10.5*(.55+slideTimer/.78):crouch?2.0:run?7.4:4.1;
   const dx=(-Math.sin(yaw)*f+Math.cos(yaw)*s)*speed*dt;
   const dz=(-Math.cos(yaw)*f-Math.sin(yaw)*s)*speed*dt;
   moveWithCollision(dx,dz);
   jumpV-=16*dt;playerY+=jumpV*dt;if(playerY<1.7){playerY=1.7;jumpV=0}
-  const targetY=crouch?1.05:1.7;playerY+=(targetY-playerY)*Math.min(1,dt*12);
+  if(slideTimer>0){slideTimer=Math.max(0,slideTimer-dt);if(slideTimer===0){crouch=false;$('crouchBtn').classList.remove('active')}}
+  const targetY=slideTimer>0?.78:crouch?1.05:1.7;playerY+=(targetY-playerY)*Math.min(1,dt*(slideTimer>0?18:12));
   const moving=Math.hypot(f,s)>.08;walkTime+=moving?dt*(run?13:8):0;
   camera.position.set(player.x,playerY+(moving?Math.sin(walkTime)*.025:0),player.z);camera.rotation.order='YXZ';camera.rotation.set(pitch+recoil,yaw,0);recoil=Math.max(0,recoil-dt*.24);
-  if(weaponGroup){weaponGroup.position.y=-.48+(inspect?Math.sin((1-inspect)*Math.PI)*.3:0);weaponGroup.rotation.z=inspect?Math.sin((1-inspect)*Math.PI)*.7:0}
+  if(weaponGroup){weaponBob=moving?Math.sin(walkTime)*.018:0;weaponKick=Math.max(0,weaponKick-dt*4.5);weaponGroup.position.set(.48,-.48+weaponBob+(inspect?Math.sin((1-inspect)*Math.PI)*.3:0),-.88+weaponKick);weaponGroup.rotation.set(-.08-weaponKick*.55,-.08,Math.sin(walkTime)*.012+(inspect?Math.sin((1-inspect)*Math.PI)*.7:0));}
   if(inspect>0)inspect=Math.max(0,inspect-dt*1.6);
   updateBots(dt);
  }
