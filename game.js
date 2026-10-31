@@ -1,25 +1,20 @@
-
-const player = document.getElementById("player");
-const message = document.getElementById("message");
-
-let x = 0;
-
-function move(direction) {
-  x += direction;
-
-  if (x > 120) x = 120;
-  if (x < -120) x = -120;
-
-  player.style.transform = `translateX(${x}px)`;
-  message.textContent = "¡Estás jugando BOBLOX!";
-}
-
-document.addEventListener("keydown", function(event) {
-  if (event.key === "ArrowRight" || event.key === "d") {
-    move(20);
-  }
-
-  if (event.key === "ArrowLeft" || event.key === "a") {
-    move(-20);
-  }
-});
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),coinEl=document.getElementById('coinCount'),msg=document.getElementById('gameMessage'),STORE_KEY='bloxworld_demo_v1';
+let saved={coins:500,owned:['Clásico'],equipped:'Clásico',creations:[]};try{saved={...saved,...JSON.parse(localStorage.getItem(STORE_KEY)||'{}')}}catch(e){}
+let coins=saved.coins,owned=saved.owned,equipped=saved.equipped,creations=saved.creations;
+const items=[{name:'Casco neón',icon:'🪖',price:120},{name:'Gafas pro',icon:'🕶️',price:80},{name:'Mochila cohete',icon:'🎒',price:160},{name:'Corona dorada',icon:'👑',price:220},{name:'Camisa gamer',icon:'👕',price:60}];
+function save(){localStorage.setItem(STORE_KEY,JSON.stringify({coins,owned,equipped,creations}));coinEl.textContent=coins;document.getElementById('equippedText').textContent='Equipado: '+equipped}save();
+let px=2.5,py=2.5,angle=0;const map=['11111111','10000001','10100001','10001001','10000001','10100001','10000001','11111111'],targets=[{x:5.4,y:2.4,alive:true},{x:2.4,y:5.3,alive:true},{x:5.6,y:5.5,alive:true}];
+function resize(){const r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);canvas.width=Math.floor(r.width*d);canvas.height=Math.floor(r.height*d);ctx.setTransform(d,0,0,d,0,0);draw()}
+function wall(x,y){return (map[Math.floor(y)]||'1')[Math.floor(x)]!=='0'}
+function draw(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;ctx.clearRect(0,0,w,h);const horizon=h*.48;let sky=ctx.createLinearGradient(0,0,0,horizon);sky.addColorStop(0,'#18284b');sky.addColorStop(1,'#637da4');ctx.fillStyle=sky;ctx.fillRect(0,0,w,horizon);let floor=ctx.createLinearGradient(0,horizon,0,h);floor.addColorStop(0,'#4a5366');floor.addColorStop(1,'#151d2d');ctx.fillStyle=floor;ctx.fillRect(0,horizon,w,h-horizon);
+for(let x=0;x<w;x+=4){const ray=angle+Math.atan((x-w/2)/(w*.62));let dist=.05,hit=false;while(dist<12&&!hit){dist+=.035;hit=wall(px+Math.cos(ray)*dist,py+Math.sin(ray)*dist)}const corrected=dist*Math.cos(ray-angle),wh=Math.min(h*1.5,h*.82/Math.max(.12,corrected)),y=horizon-wh/2,shade=Math.max(35,155-corrected*17);ctx.fillStyle=hit?'rgb('+(shade*.55)+','+(shade*.72)+','+shade+')':'#334';ctx.fillRect(x,y,4,wh);if(x%24===0){ctx.fillStyle='#ffffff18';ctx.fillRect(x,y,1,wh)}}
+targets.forEach(t=>{if(!t.alive)return;const dx=t.x-px,dy=t.y-py,dist=Math.hypot(dx,dy);let rel=Math.atan2(dy,dx)-angle;while(rel>Math.PI)rel-=Math.PI*2;while(rel<-Math.PI)rel+=Math.PI*2;if(Math.abs(rel)>.8||dist<.2)return;const sx=w/2+Math.tan(rel)*w*.62,sz=Math.min(h*.32,h*.5/dist),sy=horizon+sz*.13;ctx.fillStyle='#111a2c';ctx.fillRect(sx-sz*.25,sy-sz*.2,sz*.5,sz*.8);ctx.fillStyle='#ffb36b';ctx.fillRect(sx-sz*.19,sy-sz*.48,sz*.38,sz*.32);ctx.fillStyle='#ff4f70';ctx.fillRect(sx-sz*.28,sy+sz*.18,sz*.56,sz*.25);ctx.fillStyle='white';ctx.fillRect(sx-sz*.1,sy-sz*.36,sz*.06,sz*.06);ctx.fillRect(sx+sz*.04,sy-sz*.36,sz*.06,sz*.06)});ctx.fillStyle='#101827';ctx.beginPath();ctx.moveTo(w*.42,h);ctx.lineTo(w*.45,h*.82);ctx.lineTo(w*.56,h*.82);ctx.lineTo(w*.6,h);ctx.fill();ctx.fillStyle='#72839d';ctx.fillRect(w*.485,h*.78,w*.035,h*.17)}
+function move(dir){const nx=px+Math.cos(angle)*dir*.22,ny=py+Math.sin(angle)*dir*.22;if(!wall(nx,py))px=nx;if(!wall(px,ny))py=ny;draw()}function turn(dir){angle+=dir*.17;draw()}
+function shoot(){let best=null,bd=99;targets.forEach(t=>{if(!t.alive)return;const dx=t.x-px,dy=t.y-py,d=Math.hypot(dx,dy);let a=Math.atan2(dy,dx)-angle;while(a>Math.PI)a-=Math.PI*2;while(a<-Math.PI)a+=Math.PI*2;if(Math.abs(a)<.12&&d<bd){best=t;bd=d}});if(best){best.alive=false;coins+=25;msg.textContent='¡Objetivo alcanzado! +25 Bloxbux';save();document.getElementById('hitFlash').style.border='4px solid #ff5555';setTimeout(()=>document.getElementById('hitFlash').style.border='0',100);if(targets.every(t=>!t.alive)){targets.forEach(t=>t.alive=true);msg.textContent='¡Ronda completada! Nuevos objetivos'}}else msg.textContent='Sigue apuntando…';draw()}
+document.getElementById('forwardBtn').onclick=()=>move(1);document.getElementById('backBtn').onclick=()=>move(-1);document.getElementById('leftBtn').onclick=()=>turn(-1);document.getElementById('rightBtn').onclick=()=>turn(1);document.getElementById('shootBtn').onclick=shoot;
+document.addEventListener('keydown',e=>{if(['ArrowUp','w','W'].includes(e.key))move(1);if(['ArrowDown','s','S'].includes(e.key))move(-1);if(['ArrowLeft','a','A'].includes(e.key))turn(-1);if(['ArrowRight','d','D'].includes(e.key))turn(1);if(e.code==='Space'){e.preventDefault();shoot()}});
+function open(id){document.getElementById(id).hidden=false}function close(id){document.getElementById(id).hidden=true}document.getElementById('shopOpen').onclick=()=>{renderShop();open('shopModal')};document.getElementById('creatorOpen').onclick=()=>open('creatorModal');document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>close(b.dataset.close));
+function renderShop(){const box=document.getElementById('shopItems');box.innerHTML='';items.forEach(it=>{const row=document.createElement('div');row.className='shop-card';const icon=document.createElement('span');icon.className='item-icon';icon.textContent=it.icon;const info=document.createElement('div');info.className='item-info';const name=document.createElement('strong');name.textContent=it.name;const price=document.createElement('small');price.textContent=owned.includes(it.name)?'Ya es tuyo':'🪙 '+it.price+' Bloxbux';info.append(name,price);const btn=document.createElement('button');btn.textContent=owned.includes(it.name)?(equipped===it.name?'Equipado':'Equipar'):'Comprar';btn.onclick=()=>{if(!owned.includes(it.name)){if(coins<it.price){msg.textContent='No tienes suficientes Bloxbux';return}coins-=it.price;owned.push(it.name)}equipped=it.name;save();renderShop()};row.append(icon,info,btn);box.append(row)})}
+function renderMarket(){const box=document.getElementById('marketList');box.innerHTML='';if(!creations.length){box.innerHTML='<p class="muted">Todavía no hay creaciones. ¡Sé el primero!</p>';return}creations.forEach(it=>{const card=document.createElement('div');card.className='market-card';const icon=document.createElement('div');icon.className='market-emoji';icon.textContent=it.icon;const name=document.createElement('strong');name.textContent=it.name;const price=document.createElement('small');price.textContent='🪙 '+it.price+' Bloxbux';const btn=document.createElement('button');btn.textContent=owned.includes(it.name)?'Comprado':'Comprar';btn.disabled=owned.includes(it.name);btn.onclick=()=>{if(coins<it.price){msg.textContent='No tienes suficientes Bloxbux';return}coins-=it.price;owned.push(it.name);equipped=it.name;save();renderMarket()};card.append(icon,name,price,btn);box.append(card)})}
+document.getElementById('publishCosmetic').onclick=()=>{const name=document.getElementById('cosmeticName').value.trim(),icon=document.getElementById('cosmeticType').value,price=Number(document.getElementById('cosmeticPrice').value);if(!name){alert('Escribe un nombre para tu cosmético.');return}if(!Number.isInteger(price)||price<10||price>250){alert('El precio debe estar entre 10 y 250 Bloxbux.');return}if(creations.some(x=>x.name.toLowerCase()===name.toLowerCase())){alert('Ya existe una creación con ese nombre.');return}creations.push({name,icon,price});save();renderMarket();close('creatorModal');document.getElementById('cosmeticName').value='';msg.textContent='¡Tu cosmético ya está en el mercado de este dispositivo!'};
+renderMarket();renderShop();window.addEventListener('resize',resize);resize();
