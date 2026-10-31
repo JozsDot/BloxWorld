@@ -168,6 +168,7 @@ function addLootChest(x,z,index){
  const lamp=new THREE.PointLight(0xe9bd6b,1.15,5);lamp.position.y=1.25;root.add(lamp);lootChests.push({root,lidPivot,x,z,index,opened:false});
 }
 function updateLootPrompt(){
+ for(const c of lootChests){if(c.opened&&c.lidPivot.rotation.x>-1.65)c.lidPivot.rotation.x=Math.max(-1.65,c.lidPivot.rotation.x-.12)}
  let nearest=null,best=3.35;for(const c of lootChests){if(!c.opened){const d=Math.hypot(player.x-c.x,player.z-c.z);if(d<best){best=d;nearest=c}}}
  nearbyChest=nearest;const b=$('lootBtn');if(b)b.hidden=!playing||!nearest;if(nearest)setMessage('COFRE CERCA · ACÉRCATE Y ABRE EL BOTÍN');
 }
@@ -176,7 +177,7 @@ function renderInventoryPanel(){
  host.innerHTML=slots.map((n,i)=>'<button class="inventory-weapon '+(weaponSlot===i?'active':'')+'" data-slot="'+i+'"><b>ESPACIO '+(i+1)+'</b><span>'+n.toUpperCase()+'</span><small>'+(n==='Cuchillo'?'CUERPO A CUERPO':ammoState[n].mag+' / '+ammoState[n].reserve)+'</small></button>').join('');
 }
 function openNearbyChest(){
- if(!playing||!nearbyChest)return;const chest=nearbyChest;chest.opened=true;chest.lidPivot.rotation.x=-1.65;
+ if(!playing||!nearbyChest)return;const chest=nearbyChest;chest.opened=true;
  const owned=slots.filter(n=>n!=='Cuchillo'),available=weaponData.filter(w=>w.kind!=='knife'&&!owned.includes(w.name));let reward='';
  if(available.length&&(owned.length<2||Math.random()<.38)){
   const w=available[Math.floor(Math.random()*available.length)],slot=slots.findIndex(n=>n==='Cuchillo'),target=slot>=0?slot:weaponSlot;
