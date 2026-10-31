@@ -43,9 +43,10 @@
     </div>
     <div class="map-stamp"><b>01</b><span>DESIERTO<br>ARENA</span></div>
   </section>
+  <section class="map-picker"><div class="picker-heading"><span>SELECCIONA TU CAMPO DE BATALLA</span><small>3 MAPAS DISPONIBLES</small></div><div class="map-options"><button class="map-option selected" data-map="desert"><span class="map-preview desert-preview">🏜️</span><b>PIRÁMIDES</b><small>Desierto · Arena</small></button><button class="map-option" data-map="city"><span class="map-preview city-preview">🏙️</span><b>CIUDAD</b><small>Calles · Exploración libre</small></button><button class="map-option" data-map="island"><span class="map-preview island-preview">🏝️</span><b>ISLA</b><small>Playa · Exploración libre</small></button></div></section>
   <section class="lobby-cards">
     <article class="info-card"><div class="info-icon">⚔</div><div><b>ENTRENAMIENTO</b><small>Practica contra bots</small></div><span class="status-dot">●</span></article>
-    <article class="info-card"><div class="info-icon">🏜</div><div><b>MAPA SELECCIONADO</b><small>Pirámides del Desierto</small></div><span class="map-number">01</span></article>
+    <article class="info-card"><div class="info-icon">🏜</div><div><b>MAPA SELECCIONADO</b><small id="lobbyMapName">PIRÁMIDES DEL DESIERTO</small></div><span class="map-number" id="lobbyMapNumber">01</span></article>
   </section>
   <section class="lobby-footer"><span>🟦 BLOXWORLD BATTLE ARENA</span><span>PROTOTIPO JUGABLE · VERSIÓN 0.2</span></section>
 </main>
@@ -54,12 +55,13 @@
   <canvas id="game" aria-label="Mapa de Pirámides del Desierto"></canvas>
   <div class="game-top-hud">
     <button class="back-button" id="backLobbyBtn">‹ <span>LOBBY</span></button>
-    <div class="map-hud"><b>PIRÁMIDES DEL DESIERTO</b><small>ENTRENAMIENTO</small></div>
+    <div class="map-hud"><b id="mapTitle">PIRÁMIDES DEL DESIERTO</b><small>ENTRENAMIENTO</small></div>
     <div class="match-hud"><span class="health-icon">♥</span><b id="healthValue">100</b><small>HP</small><span class="hud-divider"></span><b>◆ <span id="gameCoins">500</span></b></div>
   </div>
   <div class="crosshair" aria-hidden="true"><i></i></div>
   <div class="game-message" id="gameMessage">ENCUENTRA A LOS RIVALES · BUENA SUERTE</div>
-  <div class="weapon-hud"><div class="weapon-mark">BW</div><div class="weapon-info"><b>RIFLE TÁCTICO</b><small>AR-01 · MODO SEMIAUTO</small></div><div class="ammo-info"><b>∞</b><small>RESERVA</small></div></div>
+  <div class="weapon-tools"><button id="switchBtn" class="tool-button"><b>⇄</b><small>CAMBIAR</small></button><button id="inspectBtn" class="tool-button"><b>⟳</b><small>INSPECCIONAR</small></button></div>
+  <div class="weapon-hud"><div class="weapon-mark">BW</div><div class="weapon-info"><b id="weaponName">AK-47</b><small id="weaponType">FUSIL DE ASALTO</small></div><div class="ammo-info"><b id="weaponSlotLabel">1 / 2</b><small>ARMAS</small></div></div>
   <div class="combat-status"><span class="live-dot"></span> COMBATE ACTIVO <i></i> ZONA DESIERTO</div>
   <div class="touch-hud">
     <div class="joystick-wrap">
@@ -86,5 +88,5 @@
     <small class="store-note">La tienda es una demostración local; las compras no se guardan en una cuenta online.</small>
   </section>
 </div>
-<script src="game.js?v=6" defer></script>
+<script src="game.js?v=7" defer></script>
 </body></html>
