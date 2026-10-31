@@ -176,3 +176,5 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
  .tool-button{min-width:48px}
  .arsenal-panel{right:8px;width:min(300px,calc(100% - 16px))}
 }
+
+.brand em{color:#ff876b}.play-button{background:linear-gradient(100deg,#d34b37,#d18a35);border-color:#ffc0a5;box-shadow:0 9px 28px #e45d3d55}.crosshair:before,.crosshair:after{background:#f4f7fa;box-shadow:0 0 5px #111}
