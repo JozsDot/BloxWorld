@@ -29,7 +29,7 @@
 </div>
 <header class="topbar" id="lobbyHeader">
   <a class="brand" href="#" aria-label="BloxWorld inicio"><span class="brand-cube">B</span><span>BLOX<em>SHOOT</em></span></a>
-  <div class="top-actions"><div class="wallet">◆ <b id="coinCount">500</b><small> BB</small></div><button class="icon-button" id="shopOpen" aria-label="Abrir tienda">♜ <span>TIENDA</span></button></div>
+  <div class="top-actions"><div class="wallet">◆ <b id="coinCount">500</b><small> BB</small></div><button class="icon-button" id="settingsOpen" aria-label="Ajustes">⚙ <span>AJUSTES</span></button><button class="icon-button" id="shopOpen" aria-label="Abrir tienda">♜ <span>TIENDA</span></button></div>
 </header>
 <main id="lobby" class="lobby">
   <section class="lobby-hero">
@@ -81,18 +81,18 @@
   </div>
   <div class="crosshair" aria-hidden="true"><i></i></div><div class="scope-overlay" id="scopeOverlay"><div class="scope-lens"><i></i><b id="scopeMagnification">×1</b></div></div>
   <div class="game-message" id="gameMessage">ENCUENTRA A LOS RIVALES · BUENA SUERTE</div>
-  <div class="weapon-tools"><button id="cameraBtn" class="tool-button"><b>◉</b><small>TERCERA PERSONA</small></button><button id="switchBtn" class="tool-button switch-tool"><b>⇄</b><small>CAMBIAR ARMA</small></button><button id="arsenalBtn" class="tool-button"><b>▤</b><small>ARMAS</small></button><button id="reloadBtn" class="tool-button"><b>↻</b><small>RECARGAR</small></button><button id="inspectBtn" class="tool-button"><b>⟳</b><small>INSPECCIONAR</small></button></div>
+  <div class="weapon-tools" id="weaponTools"><button id="cameraBtn" class="tool-button"><b>◉</b><small>TERCERA PERSONA</small></button><button id="switchBtn" class="tool-button switch-tool"><b>⇄</b><small>CAMBIAR ARMA</small></button><button id="arsenalBtn" class="tool-button"><b>▤</b><small>ARMAS</small></button><button id="reloadBtn" class="tool-button"><b>↻</b><small>RECARGAR</small></button><button id="inspectBtn" class="tool-button"><b>⟳</b><small>INSPECCIONAR</small></button></div>
   <button id="aimBtn" class="aim-tool aim-floating" aria-label="Apuntar"><b>◎</b><small>APUNTAR</small></button>
   <button id="lootBtn" class="loot-button" hidden>▣ <span>ABRIR COFRE</span></button>
   <div class="arsenal-panel" id="arsenalPanel" hidden><div class="arsenal-head"><b>INVENTARIO</b><small>ARMAS ENCONTRADAS EN LA PARTIDA</small><button id="arsenalClose">×</button></div><div class="slot-select"><button id="slotOne" class="slot-choice active">ESPACIO 1</button><button id="slotTwo" class="slot-choice">ESPACIO 2</button></div><div id="inventoryItems" class="inventory-items"></div><div class="scope-settings"><div class="scope-title">MIRA / ÓPTICA <small>SEGÚN EL ARMA</small></div><div id="scopeChoices" class="scope-choices"></div></div></div>
   <div class="weapon-hud"><div class="weapon-mark">BW</div><div class="weapon-info"><b id="weaponName">AK-47</b><small id="weaponType">FUSIL DE ASALTO</small></div><div class="ammo-info"><b id="weaponSlotLabel">1 / 2</b><small>ARMAS</small></div></div>
   <div class="combat-status"><span class="live-dot"></span> COMBATE ACTIVO <i></i> ZONA DESIERTO</div>
   <div class="touch-hud">
-    <div class="joystick-wrap">
+    <div class="joystick-wrap" id="joystickWrap">
       <div class="joystick" id="joystick"><div class="joystick-ring"></div><div class="joystick-thumb" id="joystickThumb"></div></div>
       <span>MOVER</span>
     </div>
-    <div class="action-hud">
+    <div class="action-hud" id="actionHud">
       <div class="small-actions">
         <button class="round-action" id="crouchBtn"><span>▾</span><small>AGACHAR</small></button>
         <button class="round-action" id="jumpBtn"><span>⬆</span><small>SALTAR</small></button>
@@ -112,10 +112,10 @@
     <small class="store-note">La tienda es una demostración local; las compras no se guardan en una cuenta online.</small>
   </section>
 </div>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<div class="modal-backdrop settings-backdrop" id="settingsModal" hidden><section class="settings-modal"><button class="modal-close" id="settingsClose">×</button><div class="modal-kicker">BLOXSHOOT · CONTROLES</div><h2>AJUSTES DE PARTIDA</h2><div class="settings-section"><h3>SENSIBILIDAD</h3><label class="setting-range">Cámara normal <output id="lookSensitivityValue">1.00×</output><input id="lookSensitivity" type="range" min="0.25" max="3" step="0.05" value="1"></label><label class="setting-range">Apuntado (ADS) <output id="aimSensitivityValue">1.00×</output><input id="aimSensitivity" type="range" min="0.25" max="3" step="0.05" value="1"></label><label class="setting-range">Giroscopio <output id="scopeSensitivityValue">1.00×</output><input id="scopeSensitivity" type="range" min="0.25" max="3" step="0.05" value="1"></label></div><div class="settings-section"><h3>GRÁFICOS</h3><label class="setting-select">Calidad gráfica<select id="qualitySelect"><option value="low">Baja · más fluidez</option><option value="medium">Media · equilibrada</option><option value="high" selected>Alta · recomendada</option><option value="ultra">Ultra · más detalle</option></select></label></div><div class="settings-section settings-toggle-row"><div><b>GIROSCOPIO</b><small>Gira el teléfono para ajustar la cámara. Puede pedir permiso.</small></div><input id="gyroToggle" type="checkbox"></div><div class="settings-section"><h3>HUD PERSONALIZADO</h3><p>Activa el editor y, dentro de la partida, arrastra los controles con el dedo.</p><button type="button" class="settings-action" id="hudEditBtn">MOVER BOTONES</button><button type="button" class="settings-action secondary" id="hudResetBtn">RESTABLECER HUD</button></div><p class="settings-footnote">Los ajustes se guardan en este dispositivo. Ultra puede reducir los FPS en teléfonos menos potentes.</p></section></div>\n<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>window.BLOXSHOOT_SERVER_URL="https://bloxworld.prbzc46428.workers.dev";</script>
-<script src="game.js?v=32" defer></script>
+<script src="game.js?v=33" defer></script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}</script>
 <script>
 (()=>{const boot=document.getElementById('bootScreen');const hide=()=>{if(!boot)return;boot.classList.add('boot-hidden');setTimeout(()=>boot.remove(),650)};if(document.readyState==='complete')setTimeout(hide,1900);else window.addEventListener('load',()=>setTimeout(hide,1900),{once:true});setTimeout(hide,6500)})();
