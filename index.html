@@ -50,6 +50,7 @@
     <div class="map-stamp"><b>01</b><span>DESIERTO<br>ARENA</span></div>
   </section>
   <section class="map-picker"><div class="picker-heading"><span>SELECCIONA TU CAMPO DE BATALLA</span><small>3 MAPAS DISPONIBLES</small></div><div class="map-options"><button class="map-option selected" data-map="desert"><span class="map-preview desert-preview">🏜️</span><b>PIRÁMIDES</b><small>Desierto · Arena</small></button><button class="map-option" data-map="city"><span class="map-preview city-preview">🏙️</span><b>CIUDAD</b><small>Calles · Exploración libre</small></button><button class="map-option" data-map="island"><span class="map-preview island-preview">🏝️</span><b>ISLA</b><small>Playa · Exploración libre</small></button></div></section>
+  <section class="mode-picker"><div class="picker-heading"><span>ELIGE EL MODO DE JUEGO</span><small id="lobbyModeName">BATTLE ROYALE</small></div><div class="mode-options"><button type="button" class="mode-option selected" data-mode="battle" aria-pressed="true"><b>♜ BATTLE ROYALE</b><small>Supervivencia · Último en pie</small></button><button type="button" class="mode-option" data-mode="teams" aria-pressed="false"><b>⚔ COMBATE POR EQUIPOS</b><small>Dos bandos · Trabajo en equipo</small></button></div><p class="mode-note">MODOS EN DESARROLLO · Esta selección prepara la configuración de cada partida.</p></section>
   <button type="button" id="onlinePlayBtn" class="online-play-button">🌐 MULTIJUGADOR ONLINE <small>CREAR O UNIRSE A UNA SALA</small></button>
   <section class="lobby-cards">
     <article class="info-card"><div class="info-icon">⚔</div><div><b>ENTRENAMIENTO</b><small>Practica contra bots</small></div><span class="status-dot">●</span></article>
@@ -62,7 +63,7 @@
   <canvas id="game" aria-label="Mapa de Pirámides del Desierto"></canvas>
   <div class="game-top-hud">
     <button class="back-button" id="backLobbyBtn">‹ <span>LOBBY</span></button>
-    <div class="map-hud"><b id="mapTitle">PIRÁMIDES DEL DESIERTO</b><small>ENTRENAMIENTO</small></div>
+    <div class="map-hud"><b id="mapTitle">PIRÁMIDES DEL DESIERTO</b><small id="matchModeLabel">BATTLE ROYALE · PROTOTIPO</small></div>
     <div class="match-hud"><span class="health-icon">♥</span><b id="healthValue">100</b><small>HP</small><span class="hud-divider"></span><b>◆ <span id="gameCoins">500</span></b></div>
   </div>
   <div class="crosshair" aria-hidden="true"><i></i></div><div class="scope-overlay" id="scopeOverlay"><div class="scope-lens"><i></i><b id="scopeMagnification">×1</b></div></div>
@@ -100,6 +101,6 @@
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>window.BLOXSHOOT_SERVER_URL="https://bloxworld.prbzc46428.workers.dev";</script>
-<script src="game.js?v=26" defer></script>
+<script src="game.js?v=27" defer></script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}</script>
 </body></html>
