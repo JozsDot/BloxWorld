@@ -118,8 +118,8 @@ function drawScene(w,h,dt){
  const sky=ctx.createLinearGradient(0,0,0,h*.7);sky.addColorStop(0,'#6d8ca8');sky.addColorStop(.58,'#e8ae78');sky.addColorStop(1,'#e5b276');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
  ctx.fillStyle='#ffe6ad';ctx.beginPath();ctx.arc(w*.78,h*.18,Math.min(w,h)*.065,0,Math.PI*2);ctx.fill();
  const horizon=h*(.43+player.pitch*.28);
- ctx.fillStyle='#b98258';ctx.beginPath();ctx.moveTo(0,horizon+10);ctx.quadraticCurveTo(w*.23,horizon-65,w*.49,horizon+5);ctx.quadraticCurveTo(w*.76,horizon-58,w,horizon+12);ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.fill();
- ctx.fillStyle='#d8a269';ctx.beginPath();ctx.moveTo(0,horizon+80);ctx.quadraticCurveTo(w*.28,horizon+5,w*.53,horizon+88);ctx.quadraticCurveTo(w*.78,horizon+30,w,horizon+76);ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.fill();
+ ctx.fillStyle='#b98258';ctx.beginPath();ctx.moveTo(0,horizon+24);ctx.lineTo(w*.16,horizon+4);ctx.lineTo(w*.34,horizon+20);ctx.lineTo(w*.53,horizon+8);ctx.lineTo(w*.72,horizon+25);ctx.lineTo(w*.88,horizon+9);ctx.lineTo(w,horizon+22);ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#d8a269';ctx.beginPath();ctx.moveTo(0,horizon+92);ctx.lineTo(w*.18,horizon+66);ctx.lineTo(w*.37,horizon+88);ctx.lineTo(w*.58,horizon+70);ctx.lineTo(w*.79,horizon+94);ctx.lineTo(w,horizon+73);ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.fill();
  // Perspectiva del suelo
  const focal=w*.92;
  for(let i=1;i<=13;i++){
@@ -132,10 +132,15 @@ function drawScene(w,h,dt){
  blocks.forEach(b=>{const q=project(b.x,0,b.z,w,h);if(q)things.push({d:q.depth,draw:()=>drawBlock(b,w,h)})});
  targets.filter(t=>t.alive).forEach(t=>{const q=project(t.x,0,t.z,w,h);if(q)things.push({d:q.depth,draw:()=>drawBot(t,w,h)})});
  things.sort((a,b)=>b.d-a.d).forEach(o=>o.draw());
- // arma en primer plano
- ctx.save();ctx.translate(w*.79,h*.88);ctx.rotate(-.08);
- ctx.fillStyle='#19293c';ctx.fillRect(-8,-10,w*.16,h*.12);ctx.fillStyle='#65788d';ctx.fillRect(w*.025,-h*.14,w*.12,h*.11);ctx.fillStyle='#2d4055';ctx.fillRect(w*.04,-h*.17,w*.11,h*.05);
- ctx.fillStyle='#0b1829';ctx.fillRect(w*.065,-h*.09,w*.045,h*.095);ctx.restore();
+ // Brazos y rifle en primera persona: manga, mano y arma con volumen
+ ctx.save();const unit=Math.min(w,h),gx=w*.79,gy=h*.91;ctx.translate(gx,gy);ctx.rotate(-.12);
+ ctx.fillStyle='#101b2a';ctx.beginPath();ctx.moveTo(-unit*.025,unit*.20);ctx.lineTo(unit*.19,unit*.20);ctx.lineTo(unit*.16,-unit*.015);ctx.lineTo(unit*.055,-unit*.045);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#344b61';ctx.beginPath();ctx.moveTo(unit*.005,unit*.16);ctx.lineTo(unit*.155,unit*.16);ctx.lineTo(unit*.13,unit*.015);ctx.lineTo(unit*.055,-unit*.01);ctx.closePath();ctx.fill();ctx.fillStyle='#71869a';ctx.fillRect(unit*.035,unit*.015,unit*.115,unit*.018);
+ ctx.fillStyle='#172536';ctx.beginPath();ctx.moveTo(-unit*.045,-unit*.12);ctx.lineTo(unit*.025,-unit*.14);ctx.lineTo(unit*.055,-unit*.025);ctx.lineTo(-unit*.01,unit*.015);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#26394c';ctx.beginPath();ctx.moveTo(-unit*.005,-unit*.16);ctx.lineTo(unit*.22,-unit*.19);ctx.lineTo(unit*.235,-unit*.115);ctx.lineTo(unit*.015,-unit*.075);ctx.closePath();ctx.fill();ctx.fillStyle='#657d91';ctx.fillRect(unit*.045,-unit*.177,unit*.135,unit*.018);ctx.fillStyle='#101b29';ctx.fillRect(unit*.19,-unit*.17,unit*.19,unit*.035);ctx.fillStyle='#8197a8';ctx.fillRect(unit*.205,-unit*.177,unit*.17,unit*.009);
+ ctx.fillStyle='#101a27';ctx.fillRect(unit*.095,-unit*.225,unit*.07,unit*.045);ctx.fillStyle='#7d96aa';ctx.fillRect(unit*.11,-unit*.218,unit*.04,unit*.012);ctx.fillStyle='#0c1724';ctx.fillRect(unit*.045,-unit*.09,unit*.065,unit*.105);
+ ctx.fillStyle='#172536';ctx.beginPath();ctx.moveTo(unit*.06,-unit*.09);ctx.lineTo(unit*.12,-unit*.10);ctx.lineTo(unit*.135,unit*.015);ctx.lineTo(unit*.09,unit*.035);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#c58d68';ctx.beginPath();ctx.roundRect(unit*.075,-unit*.105,unit*.078,unit*.075,unit*.018);ctx.fill();ctx.fillStyle='#e0ad82';ctx.fillRect(unit*.085,-unit*.095,unit*.058,unit*.014);ctx.restore();
  // viñeta ligera
  const vg=ctx.createRadialGradient(w/2,h*.48,Math.min(w,h)*.18,w/2,h*.48,Math.max(w,h)*.8);vg.addColorStop(.5,'#00000000');vg.addColorStop(1,'#07101e55');ctx.fillStyle=vg;ctx.fillRect(0,0,w,h);
 }
