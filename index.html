@@ -1,30 +1,14 @@
-
 <!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BOBLOX</title>
-<link rel="stylesheet" href="style.css">
-</head>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"><meta name="theme-color" content="#10172b"><title>BloxWorld — Arena</title><link rel="stylesheet" href="style.css"></head>
 <body>
-
-<header>🎮 BOBLOX</header>
-
+<header class="topbar"><a class="brand" href="#">🟦 BLOX<span>WORLD</span></a><div class="wallet">🪙 <strong id="coinCount">500</strong> <small>Bloxbux</small></div></header>
 <main>
-  <h1>¡Bienvenido a BOBLOX!</h1>
-  <p>¡Explora tu propio mundo!</p>
-
-  <div id="player">🧍</div>
-
-  <div class="controls">
-    <button onclick="move(-20)">⬅️</button>
-    <button onclick="move(20)">➡️</button>
-  </div>
-
-  <p id="message">¡Prepárate para jugar!</p>
-</main>
-
-<script src="game.js"></script>
-</body>
-</html>
+<section class="hero"><div><span class="eyebrow">TEMPORADA 01 · ARENA DE PRUEBA</span><h1>Entra a la batalla.</h1><p>Explora, apunta y consigue Bloxbux.</p></div><button class="secondary" id="shopOpen">🛍️ Tienda</button></section>
+<section class="game-shell"><div class="game-top"><span><i class="live-dot"></i> ARENA · ENTRENAMIENTO</span><span id="health">♥ ♥ ♥</span></div><div class="viewport"><canvas id="game" aria-label="Vista de juego en primera persona"></canvas><div class="crosshair">+</div><div class="hud-label" id="gameMessage">¡Apunta al objetivo y dispara!</div><div class="hit-flash" id="hitFlash"></div></div>
+<div class="game-bottom"><div class="move-controls"><button class="control" id="leftBtn">↶</button><button class="control" id="forwardBtn">▲</button><button class="control" id="backBtn">▼</button><button class="control" id="rightBtn">↷</button></div><button class="shoot" id="shootBtn">✦ DISPARAR</button></div><p class="tip">Computadora: W/S moverte, A/D girar y espacio disparar.</p></section>
+<section class="lower-grid"><article class="panel"><div class="panel-title"><div><span class="eyebrow">TU PERSONAJE</span><h2>Avatar cúbico</h2></div><span class="avatar-icon">🧍</span></div><p>Viste tu personaje con objetos de la tienda.</p><div class="equipped" id="equippedText">Equipado: Estilo clásico</div></article><article class="panel"><span class="eyebrow">CREA Y COMPARTE</span><h2>Tu idea, tu cosmético.</h2><p>Diseña un artículo de prueba y ponle precio en Bloxbux.</p><button class="primary" id="creatorOpen">＋ Crear cosmético</button></article></section>
+<section class="panel market-panel"><span class="eyebrow">HECHO POR LA COMUNIDAD</span><h2>Mercado de creadores</h2><div id="marketList" class="market-list"><p class="muted">Todavía no hay creaciones. ¡Sé el primero!</p></div></section>
+<footer>BloxWorld · Prototipo de juego. Bloxbux son monedas virtuales de prueba.</footer></main>
+<div class="modal-backdrop" id="shopModal" hidden><section class="modal"><button class="close" data-close="shopModal">×</button><span class="eyebrow">PERSONALIZA TU AVATAR</span><h2>Tienda BloxWorld</h2><div id="shopItems" class="shop-items"></div></section></div>
+<div class="modal-backdrop" id="creatorModal" hidden><section class="modal"><button class="close" data-close="creatorModal">×</button><span class="eyebrow">TALLER DE CREADORES</span><h2>Publica un cosmético</h2><label for="cosmeticName">Nombre del artículo</label><input id="cosmeticName" maxlength="24" placeholder="Ej. Casco galáctico"><label for="cosmeticType">Tipo</label><select id="cosmeticType"><option value="🪖">Casco</option><option value="🕶️">Gafas</option><option value="🎒">Mochila</option><option value="👑">Sombrero</option><option value="👕">Camisa</option></select><label for="cosmeticPrice">Precio en Bloxbux (10–250)</label><input id="cosmeticPrice" type="number" min="10" max="250" value="50"><button class="primary full" id="publishCosmetic">Publicar artículo</button><p class="tiny">Las creaciones se guardan solo en este navegador. Publicación global y ventas entre jugadores requieren cuentas y servidor.</p></section></div>
+<script src="game.js"></script></body></html>
