@@ -28,6 +28,20 @@ const materials={};
 function mat(color,roughness=1){const key=color+'_'+roughness;if(!materials[key])materials[key]=new THREE.MeshStandardMaterial({color,roughness,metalness:0.02});return materials[key]}
 function box(parent,x,y,z,sx,sy,sz,color){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat(color));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 function cylinder(parent,x,y,z,r1,r2,h,color,segments=8){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,segments),mat(color));m.position.set(x,y,z);m.castShadow=true;parent.add(m);return m}
+function makeGroundTexture(base){
+ const c=document.createElement('canvas');c.width=c.height=512;const ctx=c.getContext('2d');
+ ctx.fillStyle=base;ctx.fillRect(0,0,512,512);
+ for(let i=0;i<11500;i++){
+  const v=Math.random(),alpha=.035+Math.random()*.13;
+  ctx.fillStyle=v>.52?'rgba(255,236,198,'+alpha+')':'rgba(48,38,30,'+alpha+')';
+  const s=.5+Math.random()*3.2;ctx.fillRect(Math.random()*512,Math.random()*512,s,s);
+ }
+ for(let i=0;i<180;i++){
+  ctx.strokeStyle='rgba(70,54,39,.09)';ctx.lineWidth=.5+Math.random();
+  ctx.beginPath();const x=Math.random()*512,y=Math.random()*512;ctx.moveTo(x,y);ctx.lineTo(x+(Math.random()-.5)*28,y+(Math.random()-.5)*28);ctx.stroke();
+ }
+ const texture=new THREE.CanvasTexture(c);texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(7,7);texture.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),4);return texture;
+}
 function addPyramid(x,z,size,height){
  colliders.push({minX:x-size*.72,maxX:x+size*.72,minZ:z-size*.72,maxZ:z+size*.72});
  const body=new THREE.Mesh(new THREE.ConeGeometry(size,height,4,1),mat(0xb8895d));body.rotation.y=Math.PI/4;body.position.set(x,height/2,z);body.castShadow=true;body.receiveShadow=true;worldGroup.add(body);
@@ -44,6 +58,19 @@ function addBuilding(x,z,w,h,d,color){
  }
  box(worldGroup,x-w*.22,1.05,z-d/2-.14,.95,2.1,.16,0x26343c);
  box(worldGroup,x,h+.42,z,.8,.48,.75,0x53616b);
+ // Molduras, pilares y maquinaria de azotea para romper las siluetas cúbicas
+ const trim=0x273b4b;
+ for(const side of [-1,1])for(const front of [-1,1]){
+  const px=x+side*(w/2-.16),pz=z+front*(d/2-.16);
+  const pillar=cylinder(worldGroup,px,h/2,pz,.13,.16,h,trim,8);pillar.castShadow=true;
+  box(worldGroup,px,h*.72,pz,.38,.12,.38,0x71818a);
+ }
+ for(let k=0;k<3;k++){
+  const unit=box(worldGroup,x-w*.28+k*w*.28,h+.48,z+d*.18,.65,.38,.55,0x263640);
+  box(worldGroup,unit.position.x,h+.7,unit.position.z,.72,.07,.62,0x85939a);
+ }
+ box(worldGroup,x,h*.28,z-d/2-.18,w*.82,.16,.24,0x263b4b);
+
 }
 function addPalm(x,z){
  const trunk=cylinder(worldGroup,x,2.2,z,.2,.34,4.4,0x76543a,8);trunk.rotation.z=-.12;
@@ -77,7 +104,7 @@ function buildWorld(){
  const sun=new THREE.DirectionalLight(desert?0xffd3a0:0xd5e7ff,2.35);sun.position.set(-35,55,28);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-80;sun.shadow.camera.right=80;sun.shadow.camera.top=80;sun.shadow.camera.bottom=-80;sun.shadow.bias=-0.00018;sun.shadow.normalBias=0.025;worldGroup.add(sun);
  const terrain=new THREE.PlaneGeometry(220,220,64,64),pos=terrain.attributes.position;
  for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getY(i);pos.setZ(i,desert?Math.sin(x*.055+z*.027)*.8+Math.cos(z*.08)*.45:city?0:Math.sin(x*.04)*.35+Math.cos(z*.06)*.3)}
- terrain.computeVertexNormals();const ground=new THREE.Mesh(terrain,new THREE.MeshStandardMaterial({color:desert?0xc59a69:city?0x59656c:0x839b68,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.08;ground.receiveShadow=true;worldGroup.add(ground);
+ terrain.computeVertexNormals();const ground=new THREE.Mesh(terrain,new THREE.MeshStandardMaterial({color:0xffffff,map:makeGroundTexture(desert?'#b99068':city?'#59656c':'#788b60'),roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.08;ground.receiveShadow=true;worldGroup.add(ground);
  if(city){
   box(worldGroup,0,.015,-58,17,.04,145,0x252e38);for(let z=-5;z>-125;z-=10)box(worldGroup,0,.045,z,.18,.025,4.2,0xe6c66e);
   [[-18,-24,10,15,10],[18,-32,11,21,11],[-28,-55,12,24,12],[29,-62,11,18,11],[-5,-83,13,27,12],[18,-108,12,21,12],[-39,-96,10,18,10],[42,-28,9,14,9]].forEach((a,i)=>addBuilding(a[0],a[1],a[2],a[3],a[4],i%2?0x3b5265:0x526577));
@@ -218,7 +245,7 @@ function renderScopeOptions(){
  if(!options.includes(weaponScopes[name]))weaponScopes[name]=options[0];
  host.innerHTML=options.map(n=>'<button type="button" class="scope-choice '+(weaponScopes[name]===n?'active':'')+'" data-zoom="'+n+'">×'+n+'</button>').join('');
  host.querySelectorAll('.scope-choice').forEach(btn=>btn.addEventListener('pointerdown',e=>{
-  e.preventDefault();e.stopPropagation();weaponScopes[name]=Number(btn.dataset.zoom);renderScopeOptions();
+  e.preventDefault();e.stopPropagation();weaponScopes[name]=Number(btn.dataset.zoom);renderScopeOptions();equipWeapon();
   if(aiming){scopeZoom=weaponScopes[name];updateAimView()}
   setMessage('MIRA ×'+weaponScopes[name]+' EQUIPADA');
  }));
@@ -248,6 +275,7 @@ function toggleAim(){
  aiming=!aiming;
  if(aiming){aimReturnMode=cameraMode;cameraMode='first';equipWeapon()}
  else{cameraMode=aimReturnMode;equipWeapon()}
+ $('cameraBtn').querySelector('small').textContent=aiming?'MODO MIRA':cameraMode==='third'?'TERCERA PERSONA':'PRIMERA PERSONA';
  updateAimView();setMessage(aiming?'MIRA ×'+(weaponScopes[slots[weaponSlot]]||1)+' ACTIVADA':'MIRA CERRADA');
 }
 function updateCoins(){$('coinCount').textContent=coins;$('gameCoins').textContent=coins}
@@ -261,7 +289,7 @@ function init3D(){
  if(!window.THREE){setMessage('No se pudo cargar el motor 3D. Revisa tu conexión e inténtalo otra vez.');return false}
  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(baseFov,innerWidth/innerHeight,.1,360);
  renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
- renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(innerWidth,innerHeight,false);
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));renderer.setSize(innerWidth,innerHeight,false);
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=true;renderer.shadowMap.needsUpdate=true;
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
  camera.position.set(0,3.9,22);scene.add(camera);makePlayerAvatar();
