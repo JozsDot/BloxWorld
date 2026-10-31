@@ -205,3 +205,24 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 #reloadBtn{border-color:#e6c17b88}#reloadBtn.active{background:linear-gradient(145deg,#a56b28,#573d25);border-color:#ffe0a0}
 .ammo-info b{min-width:42px;text-align:center;font-variant-numeric:tabular-nums}
 @media(max-width:600px){#reloadBtn{min-width:44px}.weapon-tools{max-width:65vw}}
+
+/* Óptica ADS, personalización y controles multi-touch */
+.scope-settings{padding:9px;margin:0 0 10px;border:1px solid #426079;border-radius:10px;background:#0b1b2b}
+.scope-title{display:flex;justify-content:space-between;font-size:9px;font-weight:1000;letter-spacing:1px;color:#dff7ff;margin-bottom:8px}
+.scope-title small{font-size:7px;color:#86a8c0}
+.scope-choices{display:flex;gap:7px;flex-wrap:wrap}
+.scope-choice{min-width:46px;padding:8px 10px;border:1px solid #46627b;border-radius:8px;background:#172b40;color:#e9f7ff;font-size:12px;font-weight:1000}
+.scope-choice.active{border-color:#9df3ff;background:linear-gradient(145deg,#167b91,#174767);box-shadow:0 0 0 2px #75eaff30}
+.aim-tool{border-color:#9cecff!important;background:linear-gradient(145deg,#155d76,#102a43)!important}
+.aim-tool b{font-size:23px!important;color:#c4f6ff!important}
+.scope-overlay{position:absolute;z-index:5;inset:0;display:none;place-items:center;pointer-events:none;background:radial-gradient(circle at center,transparent 0 29%,#03070dcc 30% 100%)}
+.scope-overlay.visible{display:grid}
+.scope-lens{position:relative;width:min(72vw,72vh);aspect-ratio:1;border:3px solid #d5e9d7;border-radius:50%;box-shadow:0 0 0 5px #0a1219,0 0 0 100vmax #03070dce;display:grid;place-items:center;background:radial-gradient(circle,transparent 0 96%,#111 97%)}
+.scope-lens:before,.scope-lens:after{content:"";position:absolute;background:#dce8dfb8}
+.scope-lens:before{width:1px;height:100%}.scope-lens:after{height:1px;width:100%}
+.scope-lens i{width:8px;height:8px;border:1px solid #f2d6b3;border-radius:50%;z-index:1}
+.scope-lens b{position:absolute;top:9%;right:12%;font-size:11px;color:#d8e8e1;text-shadow:0 1px 3px #000}
+#gameScreen{touch-action:none;overscroll-behavior:none}
+#gameScreen button,#game{touch-action:none;-webkit-user-select:none;user-select:none}
+@media(orientation:landscape){.arsenal-panel{max-height:calc(100dvh - 135px);overflow:auto}.scope-lens{width:min(70vh,70vw)}}
+@media(max-width:600px){.scope-choice{min-width:42px;padding:7px 9px}.scope-settings{padding:7px}}
