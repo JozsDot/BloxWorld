@@ -67,7 +67,7 @@ function buildWorld(){
  scene.background=new THREE.Color(sky);scene.fog=new THREE.Fog(sky,42,145);
  const groundColor=selectedMap==='desert'?0xc39461:selectedMap==='city'?0x4b5966:0xd7c28b;
  const ground=new THREE.Mesh(new THREE.PlaneGeometry(220,220),mat(groundColor));ground.rotation.x=-Math.PI/2;ground.position.y=-.04;ground.receiveShadow=true;worldGroup.add(ground);
- const grid=new THREE.GridHelper(180,45,0x806d58,0x9d876b);grid.position.y=.005;grid.material.transparent=true;grid.material.opacity=.12;worldGroup.add(grid);
+ const grid=new THREE.GridHelper(180,45,0x806d58,0x9d876b);grid.position.y=.005;grid.material.transparent=true;grid.material.opacity=.025;worldGroup.add(grid);
  const sun=new THREE.HemisphereLight(0xe5f2ff,0x806044,2.0);scene.add(sun);
  const key=new THREE.DirectionalLight(0xffe0b2,2.2);key.position.set(-25,45,20);key.castShadow=true;key.shadow.mapSize.set(1024,1024);scene.add(key);
  if(selectedMap==='desert'){
@@ -80,6 +80,12 @@ function buildWorld(){
  }
  // Volumetric cover blocks.
  [[-5,-13],[7,-24],[-15,-32],[15,-39],[2,-48]].forEach((p,i)=>{colliders.push({minX:p[0]-1.65,maxX:p[0]+1.65,minZ:p[1]-1.65,maxZ:p[1]+1.65});box(worldGroup,p[0],.9,p[1],3.3,1.8,3.3,i%2?0x80664d:0x9c7957)});
+ // Rocas, escombros y pequeñas variaciones visuales para dar escala al terreno.
+ for(let i=0;i<58;i++){
+  const x=(Math.random()-.5)*112,z=-8-Math.random()*92;
+  const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.25+Math.random()*.65,0),mat(selectedMap==='desert'?0x94704f:selectedMap==='city'?0x48515a:0x887b59));
+  rock.position.set(x,.12,z);rock.scale.set(1+Math.random(),.45+Math.random()*.45,.8+Math.random());rock.rotation.set(Math.random(),Math.random()*Math.PI,Math.random());rock.castShadow=true;rock.receiveShadow=true;worldGroup.add(rock);
+ }
  const pts=selectedMap==='desert'?[[-5,-15],[5,-20],[-10,-29],[10,-34],[0,-43]]:selectedMap==='city'?[[-12,-20],[13,-28],[-20,-44],[22,-50],[0,-65]]:[[-14,-18],[14,-24],[-22,-40],[20,-48],[0,-60]];
  pts.forEach((p,i)=>addBot(p[0],p[1],i));
  scene.add(new THREE.AmbientLight(0xffffff,.18));
@@ -121,7 +127,7 @@ function init3D(){
  renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));renderer.setSize(innerWidth,innerHeight,false);
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
- renderer.outputColorSpace=THREE.SRGBColorSpace;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
  camera.position.set(0,1.7,18);scene.add(camera);
  clock=new THREE.Clock();buildWorld();equipWeapon();
  window.addEventListener('resize',resize);
@@ -197,7 +203,7 @@ function updateBots(dt){
  for(const b of bots){
   if(!b.alive)continue;
   const dx=player.x-b.x,dz=player.z-b.z,dist=Math.hypot(dx,dz);
-  b.group.rotation.y=Math.atan2(dx,dz);b.phase+=dt*(dist>5.5?8:2);const swing=Math.sin(b.phase)*.62;b.limbs[0].rotation.x=swing;b.limbs[1].rotation.x=-swing;b.limbs[2].rotation.x=-swing;b.limbs[3].rotation.x=swing;
+  b.group.rotation.y=Math.atan2(dx,dz);b.phase+=dt*(dist>5.5?8:2);b.group.position.y=Math.abs(Math.sin(b.phase))*(dist>5.5?.035:.008);const swing=Math.sin(b.phase)*.62;b.limbs[0].rotation.x=swing;b.limbs[1].rotation.x=-swing;b.limbs[2].rotation.x=-swing;b.limbs[3].rotation.x=swing;
   if(dist>5.5&&dist<34){
    const speed=dist>12?1.25:.55,step=speed*dt,tx=b.x+dx/dist*step,tz=b.z+dz/dist*step;
    if(!collidesAt(tx,tz)){b.x=tx;b.z=tz;b.group.position.set(b.x,0,b.z);}
