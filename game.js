@@ -140,6 +140,16 @@ function clearWorld(){
  if(worldGroup){scene.remove(worldGroup);worldGroup.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
  worldGroup=new THREE.Group();scene.add(worldGroup);bots=[];colliders=[];projectiles=[];enemyProjectiles=[];
 }
+function addSkyDome(desert,city){
+ const geo=new THREE.SphereGeometry(185,32,18),pos=geo.attributes.position,colors=[];
+ const top=new THREE.Color(desert?0x547b9b:city?0x405c78:0x3c8292),horizon=new THREE.Color(desert?0xe6b27f:city?0x9aafbd:0xc4d8c4);
+ for(let i=0;i<pos.count;i++){const t=THREE.MathUtils.smoothstep(pos.getY(i),-8,42);const c=horizon.clone().lerp(top,t);colors.push(c.r,c.g,c.b)}
+ geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+ const sky=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,depthWrite:false,fog:false}));
+ sky.position.y=5;sky.renderOrder=-1;worldGroup.add(sky);
+ const sun=new THREE.Mesh(new THREE.SphereGeometry(4.2,20,16),new THREE.MeshBasicMaterial({color:desert?0xffe0ad:0xf2f5ed}));
+ sun.position.set(-52,48,-118);worldGroup.add(sun);
+}
 function addDistantLandmarks(desert,city){
  const rockMat=mat(desert?0x80634e:city?0x344554:0x47634b),farMat=mat(desert?0xa77d5b:city?0x405568:0x56745c);
  for(let i=0;i<18;i++){const x=-105+i*12,z=-132-(i%4)*5,h=10+(i%5)*4,r=7+(i%3)*3;const m=new THREE.Mesh(new THREE.ConeGeometry(r,h,7),i%2?rockMat:farMat);m.position.set(x,h*.48,z);m.rotation.z=(i%3-1)*.08;m.castShadow=false;worldGroup.add(m)}
@@ -147,12 +157,12 @@ function addDistantLandmarks(desert,city){
 function buildWorld(){
  clearWorld();
  const desert=selectedMap==='desert',city=selectedMap==='city',sky=desert?0xc9a27d:city?0x647b91:0x86c5c4;
- scene.background=new THREE.Color(sky);scene.fog=new THREE.Fog(sky,desert?62:48,desert?190:155);
+ scene.background=new THREE.Color(sky);scene.fog=new THREE.Fog(sky,desert?78:city?58:65,desert?220:city?175:195);addSkyDome(desert,city);
  const hemi=new THREE.HemisphereLight(0xd9edff,desert?0x8b6544:0x34433d,1.5);worldGroup.add(hemi);
  const sun=new THREE.DirectionalLight(desert?0xffd3a0:0xd5e7ff,2.35);sun.position.set(-35,55,28);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-80;sun.shadow.camera.right=80;sun.shadow.camera.top=80;sun.shadow.camera.bottom=-80;sun.shadow.bias=-0.00018;sun.shadow.normalBias=0.025;worldGroup.add(sun);
  const terrain=new THREE.PlaneGeometry(220,220,64,64),pos=terrain.attributes.position;
  for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getY(i);pos.setZ(i,desert?Math.sin(x*.055+z*.027)*.8+Math.cos(z*.08)*.45:city?0:Math.sin(x*.04)*.35+Math.cos(z*.06)*.3)}
- terrain.computeVertexNormals();const ground=new THREE.Mesh(terrain,new THREE.MeshStandardMaterial({color:0xffffff,map:makeGroundTexture(desert?'#b99068':city?'#59656c':'#788b60'),roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.08;ground.receiveShadow=true;worldGroup.add(ground);
+ terrain.computeVertexNormals();const groundTexture=makeGroundTexture(desert?'#b99068':city?'#59656c':'#788b60');const ground=new THREE.Mesh(terrain,new THREE.MeshStandardMaterial({color:0xffffff,map:groundTexture,bumpMap:groundTexture,bumpScale:.12,roughness:.96}));ground.rotation.x=-Math.PI/2;ground.position.y=-.08;ground.receiveShadow=true;worldGroup.add(ground);
  if(city){
   box(worldGroup,0,.015,-58,17,.04,145,0x252e38);for(let z=-5;z>-125;z-=10)box(worldGroup,0,.045,z,.18,.025,4.2,0xe6c66e);
   [[-18,-24,10,15,10],[18,-32,11,21,11],[-28,-55,12,24,12],[29,-62,11,18,11],[-5,-83,13,27,12],[18,-108,12,21,12],[-39,-96,10,18,10],[42,-28,9,14,9]].forEach((a,i)=>addBuilding(a[0],a[1],a[2],a[3],a[4],i%2?0x3b5265:0x526577));
@@ -340,7 +350,7 @@ function init3D(){
  if(!window.THREE){setMessage('No se pudo cargar el motor 3D. Revisa tu conexión e inténtalo otra vez.');return false}
  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(baseFov,innerWidth/innerHeight,.1,360);
  renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
- renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.45));renderer.setSize(innerWidth,innerHeight,false);
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));renderer.setSize(innerWidth,innerHeight,false);
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=true;renderer.shadowMap.needsUpdate=true;
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;
  camera.position.set(0,3.9,22);scene.add(camera);makePlayerAvatar();
