@@ -117,7 +117,7 @@ const blocks=[{x:-5,z:-13,size:2.5,height:1.8},{x:7,z:-24,size:2.8,height:2},{x:
 function drawScene(w,h,dt){
  const sky=ctx.createLinearGradient(0,0,0,h*.7);sky.addColorStop(0,'#6d8ca8');sky.addColorStop(.58,'#e8ae78');sky.addColorStop(1,'#e5b276');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
  ctx.fillStyle='#ffe6ad';ctx.beginPath();ctx.arc(w*.78,h*.18,Math.min(w,h)*.065,0,Math.PI*2);ctx.fill();
- const horizon=h*(.43-player.pitch*.28);
+ const horizon=h*(.43+player.pitch*.28);
  ctx.fillStyle='#b98258';ctx.beginPath();ctx.moveTo(0,horizon+10);ctx.quadraticCurveTo(w*.23,horizon-65,w*.49,horizon+5);ctx.quadraticCurveTo(w*.76,horizon-58,w,horizon+12);ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.fill();
  ctx.fillStyle='#d8a269';ctx.beginPath();ctx.moveTo(0,horizon+80);ctx.quadraticCurveTo(w*.28,horizon+5,w*.53,horizon+88);ctx.quadraticCurveTo(w*.78,horizon+30,w,horizon+76);ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.fill();
  // Perspectiva del suelo
