@@ -292,7 +292,8 @@ function addCombatAccessories(target){
 function applySoldier(target,entity){if(!soldierTemplate)return;const model=skeletonClone?skeletonClone(soldierTemplate):soldierTemplate.clone(true),bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3()),scale=2.05/Math.max(size.y,.01);model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);target.clear();target.add(model);addTacticalGear(target);addAdvancedSoldierDetails(target);addCombatAccessories(target);entity.mixer=new THREE.AnimationMixer(model);entity.actions={};target.userData.mixer=entity.mixer;target.userData.actions=entity.actions;for(const clip of soldierAnimations)entity.actions[clip.name.toLowerCase()]=entity.mixer.clipAction(clip);const idle=Object.keys(entity.actions).find(n=>n.includes('idle'))||Object.keys(entity.actions)[0];if(idle)entity.actions[idle].play();entity.currentAction=idle;target.userData.currentAction=idle;if(target===playerAvatar&&weaponGroup&&cameraMode==='third'){target.add(weaponGroup);weaponGroup.position.set(.42,1.34,-.28);weaponGroup.rotation.y=Math.PI;weaponGroup.scale.setScalar(.68)}}
 function setSoldierAction(entity,kind){
  if(!entity.actions)return;
- const key=Object.keys(entity.actions).find(n=>n===kind||n.includes(kind));
+ const aliases={idle:['idle','stand','breath'],walk:['walk','walking','locomotion'],run:['run','running','sprint','jog'],jump:['jump','fall'],slide:['slide','crouch','roll'],crouch:['crouch','kneel','idle']};
+ const terms=aliases[kind]||[kind],key=Object.keys(entity.actions).find(n=>terms.some(term=>n.includes(term)));
  if(!key||key===entity.currentAction)return;
  if(entity.currentAction&&entity.actions[entity.currentAction])entity.actions[entity.currentAction].fadeOut(.16);
  entity.actions[key].reset().fadeIn(.16).play();entity.currentAction=key;
