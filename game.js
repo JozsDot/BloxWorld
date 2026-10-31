@@ -170,7 +170,7 @@ function addLootChest(x,z,index){
 function updateLootPrompt(){
  for(const c of lootChests){if(c.opened&&c.lidPivot.rotation.x>-1.65)c.lidPivot.rotation.x=Math.max(-1.65,c.lidPivot.rotation.x-.12)}
  let nearest=null,best=3.35;for(const c of lootChests){if(!c.opened){const d=Math.hypot(player.x-c.x,player.z-c.z);if(d<best){best=d;nearest=c}}}
- nearbyChest=nearest;const b=$('lootBtn');if(b)b.hidden=!playing||!nearest;if(nearest)setMessage('COFRE CERCA · ACÉRCATE Y ABRE EL BOTÍN');
+ const chestChanged=nearest!==nearbyChest;nearbyChest=nearest;const b=$('lootBtn');if(b)b.hidden=!playing||!nearest;if(nearest&&chestChanged)setMessage('COFRE CERCA · ACÉRCATE Y ABRE EL BOTÍN');
 }
 function renderInventoryPanel(){
  const host=$('inventoryItems');if(!host)return;
