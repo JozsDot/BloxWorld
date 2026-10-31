@@ -7,6 +7,8 @@ let playing=false,run=false,crouch=false,jumpV=0,playerY=1.7,jumpOffset=0,camera
 let yaw=0,pitch=0,lastShot=0,fireHeld=false,inspect=0,coins=500;
 let selectedMap='desert',weaponSlot=0;
 const slots=['AK-47','UMP45'];
+const ammoState={'AK-47':{mag:30,reserve:120},UMP45:{mag:25,reserve:125},Kar98k:{mag:5,reserve:35},M700:{mag:5,reserve:35},MP5:{mag:30,reserve:150},Uzi:{mag:32,reserve:160},Cuchillo:{mag:0,reserve:0}};
+let reloading=false,reloadTimer=null;
 const weaponData=[
  {name:'AK-47',kind:'rifle',rate:330,color:0x46545b},
  {name:'UMP45',kind:'smg',rate:210,color:0x354b5a},
@@ -96,7 +98,7 @@ async function loadGameAssets(){
   const [lm,sm]=await Promise.all([import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js'),import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/SkeletonUtils.js')]);
   GLTFLoaderClass=lm.GLTFLoader;skeletonClone=sm.clone;const loader=new GLTFLoaderClass();
   loader.load('https://toolbenchdev.com/gamedev/cc0-game-assets/low-poly-squad-kit/files/glb/figure.glb',g=>{soldierTemplate=g.scene;soldierAnimations=g.animations||[];if(playerAvatar)applySoldier(playerAvatar,{});for(const b of bots)if(b.group)applySoldier(b.group,b)},undefined,e=>console.warn('Character asset unavailable',e));
-  const assets={akWood:'https://cdn.3dassets.dev/assets/33322/v1/model.glb',smgLong:'https://cdn.3dassets.dev/assets/27545/v1/model.glb',smgCompact:'https://cdn.3dassets.dev/assets/19433/v1/model.glb',sniper:'https://cdn.3dassets.dev/assets/19438/v1/model.glb',assault:'https://cdn.3dassets.dev/assets/33318/v1/model.glb'};
+  const assets={akWood:'https://cdn.3dassets.dev/assets/33322/v1/model.glb',kar:'https://cdn.3dassets.dev/assets/33334/v1/model.glb',smgLong:'https://cdn.3dassets.dev/assets/27545/v1/model.glb',smgCompact:'https://cdn.3dassets.dev/assets/19433/v1/model.glb',sniper:'https://cdn.3dassets.dev/assets/19438/v1/model.glb',assault:'https://cdn.3dassets.dev/assets/33318/v1/model.glb'};
   for(const [key,url] of Object.entries(assets))loader.load(url,g=>{weaponTemplates[key]=g.scene;if(slots[weaponSlot]&&weaponAssetKey(slots[weaponSlot])===key)equipWeapon()},undefined,e=>console.warn('Weapon asset unavailable: '+key,e));
  }catch(e){console.warn('3D asset loader unavailable',e)}
 }
@@ -135,7 +137,7 @@ function updateProjectiles(dt){
   if(hitPoint||p.remaining<=0){worldGroup.remove(p.mesh);scene.remove(p.trail);p.mesh.geometry.dispose();p.trail.geometry.dispose();projectiles.splice(i,1);}
  }
 }
-function weaponAssetKey(name){if(name==='AK-47')return null;if(name==='UMP45'||name==='MP5')return 'smgLong';if(name==='Uzi')return 'smgCompact';if(name==='Kar98k')return 'akWood';if(name==='M700')return 'sniper';return null}
+function weaponAssetKey(name){if(name==='AK-47'||name==='Uzi')return null;if(name==='UMP45')return 'smgLong';if(name==='MP5')return 'smgCompact';if(name==='Kar98k')return 'kar';if(name==='M700')return 'sniper';return null}
 function makeWeapon(name){
  const g=new THREE.Group(),M=new THREE.MeshStandardMaterial({color:0x303b43,metalness:.8,roughness:.3}),D=new THREE.MeshStandardMaterial({color:0x151b20,metalness:.45,roughness:.4}),W=new THREE.MeshStandardMaterial({color:0x754a2c,roughness:.8}),P=new THREE.MeshStandardMaterial({color:0x303a40,roughness:.7}),R=new THREE.MeshStandardMaterial({color:0x171b1e,roughness:.9}),S=new THREE.MeshStandardMaterial({color:0x9aa4a8,metalness:.9,roughness:.2});
  const B=(x,y,z,a,b,c,m,r=0)=>{let o=new THREE.Mesh(new THREE.BoxGeometry(a,b,c),m);o.position.set(x,y,z);o.rotation.z=r;o.castShadow=true;g.add(o)},C=(x,y,z,r,l,m)=>{let o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,l,12),m);o.position.set(x,y,z);o.rotation.x=Math.PI/2;g.add(o)},T=(pts,r,m)=>{let o=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p))),18,r,8,false),m);g.add(o)};
@@ -149,20 +151,23 @@ function makeWeapon(name){
  B(0,.22,-.18,.07,.1,.08,D);B(0,.18,-.7,.06,.12,.07,D);B(0,-.16,.08,.11,.25,.14,ak||kar?W:R,-.16);T([[-.09,-.12,.08],[-.09,-.28,.02],[-.09,-.28,-.12],[-.09,-.12,-.16]],.018,M);C(0,.02,-L*.84,.05,.12,D);B(0,-.36,.04,.18,.2,.4,P,.16);return g
 }
 function equipWeapon(){
+ if(reloadTimer){clearTimeout(reloadTimer);reloadTimer=null}reloading=false;
  if(weaponGroup&&weaponGroup.parent)weaponGroup.parent.remove(weaponGroup);
  const name=slots[weaponSlot],assetKey=weaponAssetKey(name),template=assetKey&&weaponTemplates[assetKey];
  weaponGroup=new THREE.Group();
  if(template){
   const model=template.clone(true),bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
   const desiredLength=name==='M700'||name==='Kar98k'?1.55:name==='Uzi'?.9:1.28,scale=desiredLength/Math.max(size.z,.01);
-  model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);model.rotation.y=Math.PI;
+  model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);model.rotation.y=cameraMode==='first'?Math.PI:0;
   model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});weaponGroup.add(model);
- }else weaponGroup.add(makeWeapon(name));
- if(cameraMode==='first'){camera.add(weaponGroup);weaponGroup.position.set(.5,-.43,-1.05);weaponGroup.scale.setScalar(template?1:1)}
- else if(playerAvatar){playerAvatar.add(weaponGroup);weaponGroup.position.set(.4,1.25,-.22);weaponGroup.scale.setScalar(template?1: .68)}
- const w=weaponData.find(a=>a.name===name)||weaponData[0];$('weaponName').textContent=w.name;$('weaponType').textContent=w.kind==='knife'?'CUERPO A CUERPO':w.kind==='sniper'?'FRANCOTIRADOR':w.kind==='smg'?'SUBFUSIL':'FUSIL DE ASALTO';$('weaponSlotLabel').textContent=(weaponSlot+1)+' / 2';
+ }else{weaponGroup.add(makeWeapon(name));if(cameraMode==='third')weaponGroup.rotation.y=Math.PI}
+ if(cameraMode==='first'){camera.add(weaponGroup);weaponGroup.position.set(.5,-.43,-1.05)}
+ else if(playerAvatar){playerAvatar.add(weaponGroup);weaponGroup.position.set(.4,1.25,-.22)}
+ const w=weaponData.find(a=>a.name===name)||weaponData[0];$('weaponName').textContent=w.name;$('weaponType').textContent=w.kind==='knife'?'CUERPO A CUERPO':w.kind==='sniper'?'FRANCOTIRADOR':w.kind==='smg'?'SUBFUSIL':'FUSIL DE ASALTO';updateAmmoHud();
 }
 function updateCoins(){$('coinCount').textContent=coins;$('gameCoins').textContent=coins}
+function updateAmmoHud(){const n=slots[weaponSlot],w=weaponData.find(x=>x.name===n),a=ammoState[n];$('weaponSlotLabel').textContent=w&&w.kind==='knife'?'∞':a?a.mag+' / '+a.reserve:'--'}
+function reloadWeapon(){const n=slots[weaponSlot],w=weaponData.find(x=>x.name===n),a=ammoState[n];if(!playing||!w||w.kind==='knife'||reloading||!a||a.mag===w.mag||a.reserve<=0)return;reloading=true;$('reloadBtn').classList.add('active');setMessage('RECARGANDO '+n.toUpperCase());reloadTimer=setTimeout(()=>{const need=w.mag-a.mag,take=Math.min(need,a.reserve);a.mag+=take;a.reserve-=take;reloading=false;reloadTimer=null;$('reloadBtn').classList.remove('active');updateAmmoHud();setMessage('RECARGA COMPLETA')},w.kind==='sniper'?1750:1350)}
 function setMessage(t){$('gameMessage').textContent=t}
 function resize(){
  if(!renderer)return;const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
@@ -202,6 +207,7 @@ $('slotOne').addEventListener('pointerdown',e=>{e.preventDefault();weaponSlot=0;
 $('slotTwo').addEventListener('pointerdown',e=>{e.preventDefault();weaponSlot=1;$('slotTwo').classList.add('active');$('slotOne').classList.remove('active')});
 document.querySelectorAll('.equip-weapon').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();slots[weaponSlot]=weaponData[Number(b.dataset.weapon)].name;equipWeapon();$('arsenalPanel').hidden=true;setMessage(slots[weaponSlot]+' EQUIPADA')}));
 $('inspectBtn').addEventListener('pointerdown',e=>{e.preventDefault();inspect=1;setMessage('INSPECCIONANDO '+slots[weaponSlot])});
+$('reloadBtn').addEventListener('pointerdown',e=>{e.preventDefault();reloadWeapon()});
 $('runBtn').addEventListener('pointerdown',e=>{e.preventDefault();run=!run;$('runBtn').classList.toggle('active',run)});
 $('crouchBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(run){slideTimer=.95;slideSpeed=12.4;crouch=true;run=false;$('runBtn').classList.remove('active');setMessage('¡DESLIZAMIENTO!')}else{crouch=!crouch;slideTimer=0}$('crouchBtn').classList.toggle('active',crouch)});
 $('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(jumpOffset<=.02){jumpV=7.1;slideTimer=0;crouch=false;$('crouchBtn').classList.remove('active')}$('jumpBtn').classList.add('active');setTimeout(()=>$('jumpBtn').classList.remove('active'),160)});
@@ -220,7 +226,7 @@ canvas.addEventListener('pointermove',e=>{if(e.pointerId!==look.id)return;const 
 window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key===' ')e.preventDefault()});
 window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 function shoot(){
- if(!playing)return;const w=weaponData.find(a=>a.name===slots[weaponSlot])||weaponData[0],now=performance.now();if(now-lastShot<w.rate)return;lastShot=now;recoil=Math.min(.12,recoil+.035);weaponKick=Math.min(.18,weaponKick+.12);
+ if(!playing||reloading)return;const w=weaponData.find(a=>a.name===slots[weaponSlot])||weaponData[0],now=performance.now();if(now-lastShot<w.rate)return;if(w.kind!=='knife'&&ammoState[w.name].mag<=0){setMessage('SIN MUNICIÓN · PULSA RECARGAR');return}lastShot=now;if(w.kind!=='knife'){ammoState[w.name].mag--;updateAmmoHud()}recoil=Math.min(.12,recoil+.035);weaponKick=Math.min(.18,weaponKick+.12);
  if(w.kind==='knife'){let hit=null,dist=3.2;for(const b of bots){if(!b.alive)continue;const d=Math.hypot(b.x-player.x,b.z-player.z);if(d<dist) {const dx=b.x-player.x,dz=b.z-player.z,a=Math.abs(Math.atan2(-dx,-dz)-yaw);if(a<.75){hit=b;dist=d}}}if(hit){hit.alive=false;hit.group.visible=false;coins+=25;updateCoins();setMessage('ELIMINACIÓN +25 BB')}else setMessage('ACÉRCATE AL RIVAL');return}
  raycaster.setFromCamera(new THREE.Vector2(0,0),camera);
  const direction=raycaster.ray.direction.clone().normalize(),origin=new THREE.Vector3(player.x,1.48,player.z).addScaledVector(direction,.42);
