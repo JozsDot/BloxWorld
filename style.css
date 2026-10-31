@@ -180,3 +180,24 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .brand em{color:#ff876b}.play-button{background:linear-gradient(100deg,#d34b37,#d18a35);border-color:#ffc0a5;box-shadow:0 9px 28px #e45d3d55}.crosshair:before,.crosshair:after{background:#f4f7fa;box-shadow:0 0 5px #111}
 
 .game-top-hud{background:linear-gradient(180deg,#07111de8,transparent);border:0}.back-button,.match-hud,.map-hud{backdrop-filter:blur(12px);background:#0a1726d9;border:1px solid #d6e8f433;box-shadow:0 8px 24px #0004}.weapon-tools{display:flex;flex-wrap:wrap;justify-content:flex-end;max-width:50vw;gap:5px}.tool-button{min-width:54px;min-height:44px;border-radius:10px;background:linear-gradient(145deg,#152a3eec,#0a1626ee);border:1px solid #9bc9d84d;color:#eaf7ff}.tool-button b{font-size:17px;color:#8de8f2}.tool-button small{font-size:6px;letter-spacing:.4px}.round-action,.fire-button{border:1px solid #d5f1ff66;box-shadow:0 6px 20px #0007;backdrop-filter:blur(8px)}.round-action.active{background:linear-gradient(145deg,#0d8193,#124b65);border-color:#a2f5ff}.fire-button{background:linear-gradient(145deg,#e45b42,#a82e27);border-color:#ffc0a5}.arsenal-panel{background:#081522f2;border:1px solid #6fa9bd88;box-shadow:0 16px 40px #000a}@media(max-width:600px){.weapon-tools{top:calc(env(safe-area-inset-top) + 67px);right:7px;max-width:53vw;gap:4px}.tool-button{min-width:48px;min-height:41px;padding:5px}.tool-button small{font-size:5px}}
+
+/* Visual pass: tactical glass HUD, stronger hierarchy and touch feedback */
+.game-top-hud{background:linear-gradient(180deg,#07111ef2 0%,#081521a8 72%,transparent);padding:calc(env(safe-area-inset-top) + 9px) 14px 14px}
+.map-hud,.match-hud,.back-button{border:1px solid #c8e5f533;background:linear-gradient(135deg,#14283bed,#091523ed);box-shadow:0 8px 25px #0007;backdrop-filter:blur(14px)}
+.map-hud{padding:9px 13px;border-radius:10px}.map-hud b{font-size:10px;letter-spacing:1.1px}.map-hud small{font-size:7px;color:#9bb1c7}
+.match-hud{padding:9px 13px;border-radius:10px}.health-icon{color:#ff6c70;text-shadow:0 0 9px #f44}
+.weapon-hud{border:1px solid #b5d8e66b;background:linear-gradient(130deg,#0a1929f2,#1d3449ed);border-radius:12px;box-shadow:0 12px 30px #0009}
+.weapon-mark{background:linear-gradient(145deg,#f0a65d,#c74f37);color:#20140f}
+.weapon-tools{top:calc(env(safe-area-inset-top) + 72px);right:12px;gap:6px}
+.tool-button{min-width:58px;min-height:49px;border:1px solid #d6ecf05a;border-radius:10px;background:linear-gradient(145deg,#1b344bf2,#091624f2);box-shadow:0 6px 18px #0008;color:#eaf6ff}
+.tool-button:active,.tool-button.active{border-color:#a4f4ff;background:linear-gradient(145deg,#176b7d,#102f49)}
+.tool-button b{font-size:19px;color:#a9eff8}.tool-button small{font-size:6px;letter-spacing:.65px}
+.arsenal-panel{border:1px solid #9bcbdc88;border-radius:15px;background:linear-gradient(145deg,#14283af7,#071321f7);box-shadow:0 20px 60px #000b}
+.equip-weapon{background:linear-gradient(135deg,#1d3449,#101e2d);border:1px solid #47647b;color:#eff8ff}
+.equip-weapon:active{background:#23677b;border-color:#a5f4ff}
+.round-action{border:1px solid #d8edfa66;background:linear-gradient(145deg,#213b50ed,#0b1828f2);box-shadow:0 7px 18px #0008}
+.round-action span{color:#c9f7ff}.round-action.active{background:linear-gradient(145deg,#e58a43,#b44b35);border-color:#ffe0a8}
+.fire-button{background:linear-gradient(145deg,#f16d45,#b6322d);border:1px solid #ffd2b3;box-shadow:0 0 0 3px #e96b4430,0 9px 24px #0009}
+.game-message{padding:9px 15px;border:1px solid #d7eff533;border-radius:20px;background:#081522d4;backdrop-filter:blur(10px);font-size:9px;letter-spacing:1px}
+@media(max-width:600px){.game-top-hud{padding-left:8px;padding-right:8px}.map-hud{padding:7px 8px}.map-hud b{font-size:7px}.match-hud{padding:7px 8px}.weapon-tools{right:7px;gap:3px;max-width:60vw}.tool-button{min-width:46px;min-height:42px;padding:4px}.tool-button small{font-size:5px}.weapon-hud{right:8px;padding:6px 8px}.game-message{font-size:7px}}
+@media(orientation:landscape){.weapon-tools{top:calc(env(safe-area-inset-top) + 58px)}.arsenal-panel{top:calc(env(safe-area-inset-top) + 112px)}}
