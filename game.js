@@ -62,7 +62,7 @@ function addBot(x,z,index){
  const legL=limb(-.19,.83,0,.68,.14,0x273746),legR=limb(.19,.83,0,.68,.14,0x273746);
  const bootL=new THREE.Mesh(new THREE.SphereGeometry(.15,8,6),mat(dark));bootL.position.set(-.19,.12,-.08);g.add(bootL);
  const bootR=bootL.clone();bootR.position.x=.19;g.add(bootR);
- const bot={group:g,alive:true,x,z,limbs:[armL,armR,legL,legR],phase:Math.random()*6};bots.push(bot);if(soldierTemplate)applySoldier(g,bot);
+ const bot={group:g,alive:true,hp:100,x,z,limbs:[armL,armR,legL,legR],phase:Math.random()*6};bots.push(bot);if(soldierTemplate)applySoldier(g,bot);
 }
 function clearWorld(){
  if(worldGroup){scene.remove(worldGroup);worldGroup.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
@@ -73,7 +73,7 @@ function buildWorld(){
  const desert=selectedMap==='desert',city=selectedMap==='city',sky=desert?0xc9a27d:city?0x647b91:0x86c5c4;
  scene.background=new THREE.Color(sky);scene.fog=new THREE.Fog(sky,desert?62:48,desert?190:155);
  const hemi=new THREE.HemisphereLight(0xd9edff,desert?0x8b6544:0x34433d,1.5);worldGroup.add(hemi);
- const sun=new THREE.DirectionalLight(desert?0xffd3a0:0xd5e7ff,2.35);sun.position.set(-35,55,28);sun.castShadow=true;sun.shadow.mapSize.set(1536,1536);sun.shadow.camera.left=-80;sun.shadow.camera.right=80;sun.shadow.camera.top=80;sun.shadow.camera.bottom=-80;worldGroup.add(sun);
+ const sun=new THREE.DirectionalLight(desert?0xffd3a0:0xd5e7ff,2.35);sun.position.set(-35,55,28);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-80;sun.shadow.camera.right=80;sun.shadow.camera.top=80;sun.shadow.camera.bottom=-80;sun.shadow.bias=-0.00018;sun.shadow.normalBias=0.025;worldGroup.add(sun);
  const terrain=new THREE.PlaneGeometry(220,220,64,64),pos=terrain.attributes.position;
  for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getY(i);pos.setZ(i,desert?Math.sin(x*.055+z*.027)*.8+Math.cos(z*.08)*.45:city?0:Math.sin(x*.04)*.35+Math.cos(z*.06)*.3)}
  terrain.computeVertexNormals();const ground=new THREE.Mesh(terrain,new THREE.MeshStandardMaterial({color:desert?0xc59a69:city?0x59656c:0x839b68,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.08;ground.receiveShadow=true;worldGroup.add(ground);
@@ -127,15 +127,12 @@ function makePlayerAvatar(){
 function updateEnemyProjectiles(dt){for(let i=enemyProjectiles.length-1;i>=0;i--){const p=enemyProjectiles[i];p.life-=dt;p.mesh.position.addScaledVector(p.dir,p.speed*dt);if(p.mesh.position.distanceTo(new THREE.Vector3(player.x,1.05+jumpOffset,player.z))<.58){hurtPlayer(8);if(p.mesh.parent)p.mesh.parent.remove(p.mesh);p.mesh.geometry.dispose();enemyProjectiles.splice(i,1);continue}if(p.life<=0){if(p.mesh.parent)p.mesh.parent.remove(p.mesh);p.mesh.geometry.dispose();enemyProjectiles.splice(i,1)}}}
 function updateProjectiles(dt){
  for(let i=projectiles.length-1;i>=0;i--){
-  const p=projectiles[i],step=Math.min(p.speed*dt,p.remaining),origin=p.mesh.position.clone();
-  raycaster.set(origin,p.direction);raycaster.far=step+.12;
-  const hits=raycaster.intersectObjects(worldGroup.children.filter(o=>o!==p.mesh),true);
-  let hitPoint=null,hitBot=null;
-  if(hits.length){hitPoint=hits[0].point;let root=hits[0].object;while(root.parent&&root.parent!==worldGroup)root=root.parent;hitBot=bots.find(b=>b.group===root&&b.alive)||null;}
-  if(hitPoint){p.mesh.position.copy(hitPoint);if(hitBot){hitBot.alive=false;hitBot.group.visible=false;coins+=25;updateCoins();setMessage('IMPACTO · BOT ELIMINADO +25 BB')}else setMessage('IMPACTO');}
-  else{p.mesh.position.addScaledVector(p.direction,step);p.remaining-=step;}
-  p.trail.geometry.setFromPoints([p.mesh.position.clone().addScaledVector(p.direction,-.65),p.mesh.position]);
-  if(hitPoint||p.remaining<=0){worldGroup.remove(p.mesh);scene.remove(p.trail);p.mesh.geometry.dispose();p.trail.geometry.dispose();projectiles.splice(i,1);}
+  const p=projectiles[i],step=Math.min(p.speed*dt,p.remaining);
+  p.mesh.position.addScaledVector(p.direction,step);p.remaining-=step;
+  p.trail.geometry.setFromPoints([p.mesh.position.clone().addScaledVector(p.direction,-.72),p.mesh.position]);
+  if(p.remaining<=0){
+   worldGroup.remove(p.mesh);scene.remove(p.trail);p.mesh.geometry.dispose();p.trail.geometry.dispose();projectiles.splice(i,1);
+  }
  }
 }
 function weaponAssetKey(name){if(name==='AK-47'||name==='Uzi')return null;if(name==='UMP45')return 'smgLong';if(name==='MP5')return 'smgCompact';if(name==='Kar98k')return 'kar';if(name==='M700')return 'sniper';return null}
@@ -175,10 +172,10 @@ function resize(){
 }
 function init3D(){
  if(!window.THREE){setMessage('No se pudo cargar el motor 3D. Revisa tu conexión e inténtalo otra vez.');return false}
- scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(76,innerWidth/innerHeight,.1,240);
+ scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(76,innerWidth/innerHeight,.1,360);
  renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));renderer.setSize(innerWidth,innerHeight,false);
- renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=true;
+ renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=true;renderer.shadowMap.needsUpdate=true;
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
  camera.position.set(0,3.9,22);scene.add(camera);makePlayerAvatar();
  clock=new THREE.Clock();buildWorld();equipWeapon();loadGameAssets();
@@ -227,17 +224,49 @@ canvas.addEventListener('pointermove',e=>{if(e.pointerId!==look.id)return;const 
 window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key===' ')e.preventDefault()});
 window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 function shoot(){
- if(!playing||reloading)return;const w=weaponData.find(a=>a.name===slots[weaponSlot])||weaponData[0],now=performance.now();if(now-lastShot<w.rate)return;if(w.kind!=='knife'&&ammoState[w.name].mag<=0){setMessage('SIN MUNICIÓN · PULSA RECARGAR');return}lastShot=now;if(w.kind!=='knife'){ammoState[w.name].mag--;updateAmmoHud()}recoil=Math.min(.12,recoil+.035);weaponKick=Math.min(.18,weaponKick+.12);
- if(w.kind==='knife'){let hit=null,dist=3.2;for(const b of bots){if(!b.alive)continue;const d=Math.hypot(b.x-player.x,b.z-player.z);if(d<dist) {const dx=b.x-player.x,dz=b.z-player.z,a=Math.abs(Math.atan2(-dx,-dz)-yaw);if(a<.75){hit=b;dist=d}}}if(hit){hit.alive=false;hit.group.visible=false;coins+=25;updateCoins();setMessage('ELIMINACIÓN +25 BB')}else setMessage('ACÉRCATE AL RIVAL');return}
+ if(!playing||reloading)return;
+ const w=weaponData.find(a=>a.name===slots[weaponSlot])||weaponData[0],now=performance.now();
+ if(now-lastShot<w.rate)return;
+ if(w.kind!=='knife'&&ammoState[w.name].mag<=0){setMessage('SIN MUNICIÓN · PULSA RECARGAR');return}
+ lastShot=now;
+ if(w.kind!=='knife'){ammoState[w.name].mag--;updateAmmoHud()}
+ recoil=Math.min(.12,recoil+.035);weaponKick=Math.min(.18,weaponKick+.12);
+ if(w.kind==='knife'){
+  let hit=null,dist=3.2;
+  for(const b of bots){if(!b.alive)continue;const d=Math.hypot(b.x-player.x,b.z-player.z);if(d<dist){const dx=b.x-player.x,dz=b.z-player.z,a=Math.abs(Math.atan2(-dx,-dz)-yaw);if(a<.75){hit=b;dist=d}}}
+  if(hit){hit.alive=false;hit.hp=0;hit.group.visible=false;coins+=25;updateCoins();setMessage('ELIMINACIÓN +25 BB')}else setMessage('ACÉRCATE AL RIVAL');
+  return;
+ }
+ const range=w.kind==='sniper'?280:w.kind==='rifle'?220:150;
  raycaster.setFromCamera(new THREE.Vector2(0,0),camera);
- const direction=raycaster.ray.direction.clone().normalize(),origin=new THREE.Vector3(player.x,1.48,player.z).addScaledVector(direction,.42);
- const range=w.kind==='sniper'?150:w.kind==='rifle'?105:w.kind==='smg'?62:0;
- const speed=w.kind==='sniper'?180:w.kind==='rifle'?145:195;
- const mesh=new THREE.Mesh(new THREE.SphereGeometry(.055,6,6),new THREE.MeshBasicMaterial({color:0xffe6a1}));
+ raycaster.near=.05;raycaster.far=range;
+ const hits=raycaster.intersectObjects(worldGroup.children,true);
+ const firstHit=hits.length?hits[0]:null;
+ const direction=raycaster.ray.direction.clone().normalize();
+ const cameraOrigin=raycaster.ray.origin.clone();
+ const endPoint=firstHit?firstHit.point.clone():cameraOrigin.clone().addScaledVector(direction,range);
+ let hitBot=null;
+ if(firstHit){
+  let node=firstHit.object;
+  while(node&&node!==worldGroup){hitBot=bots.find(b=>b.group===node&&b.alive)||null;if(hitBot)break;node=node.parent}
+ }
+ if(hitBot){
+  const distance=cameraOrigin.distanceTo(firstHit.point);
+  const baseDamage=w.kind==='sniper'?88:w.kind==='rifle'?36:24;
+  const falloff=Math.max(.48,1-Math.max(0,distance-range*.3)/(range*.7)*.52);
+  const damage=Math.max(1,Math.round(baseDamage*falloff));
+  hitBot.hp=Math.max(0,(hitBot.hp??100)-damage);
+  if(hitBot.hp<=0){hitBot.alive=false;hitBot.group.visible=false;coins+=25;updateCoins();setMessage('ELIMINACIÓN · '+Math.round(distance)+' M · +25 BB')}
+  else setMessage('IMPACTO · '+damage+' DAÑO · '+Math.round(distance)+' M');
+ }else if(firstHit){setMessage('IMPACTO EN SUPERFICIE · '+Math.round(cameraOrigin.distanceTo(firstHit.point))+' M')}
+ else{setMessage('DISPARO A LARGA DISTANCIA · '+range+' M')}
+ const origin=new THREE.Vector3(player.x,1.48+jumpOffset,player.z).addScaledVector(direction,.48);
+ const travel=endPoint.distanceTo(origin),visualDirection=endPoint.clone().sub(origin).normalize();
+ const mesh=new THREE.Mesh(new THREE.SphereGeometry(.045,6,6),new THREE.MeshBasicMaterial({color:0xffe6a1}));
  mesh.position.copy(origin);worldGroup.add(mesh);
- const trail=new THREE.Line(new THREE.BufferGeometry().setFromPoints([origin,origin.clone().addScaledVector(direction,.65)]),new THREE.LineBasicMaterial({color:0xffbd67,transparent:true,opacity:.9}));
- scene.add(trail);projectiles.push({mesh,trail,direction,speed,remaining:range});
- setMessage('BALA EN VUELO · ALCANCE '+range+' M');
+ const trail=new THREE.Line(new THREE.BufferGeometry().setFromPoints([origin,endPoint]),new THREE.LineBasicMaterial({color:0xffbd67,transparent:true,opacity:.88}));
+ scene.add(trail);
+ projectiles.push({mesh,trail,direction:visualDirection,speed:620,remaining:Math.max(.1,travel)});
 }
 function collidesAt(x,z,ignoreBot=null){
  const r=.43;
