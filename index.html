@@ -1,15 +1,88 @@
-<!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"><meta name="theme-color" content="#10172b"><title>BloxWorld — Arena 3D</title><link rel="stylesheet" href="style.css"></head><body>
-<header class="topbar"><a class="brand" href="#">🟦 BLOX<span>WORLD</span></a><div class="wallet">🪙 <strong id="coinCount">500</strong> <small>Bloxbux</small></div></header><main>
-<section class="hero" id="lobbyHero"><div><span class="eyebrow">MAPA 01 · PIRÁMIDES DEL DESIERTO</span><h1>Entra a la batalla.</h1><p>Explora las dunas, ruinas antiguas y enormes pirámides.</p></div><button class="secondary" id="shopOpen">🛍️ Tienda</button></section>
-<section class="lobby-screen" id="lobbyScreen">
-  <div class="lobby-art"><div class="lobby-sun"></div><div class="lobby-pyramid pyramid-one"></div><div class="lobby-pyramid pyramid-two"></div><div class="lobby-pyramid pyramid-three"></div><div class="lobby-copy"><span class="eyebrow">BLOXWORLD BATTLE ARENA</span><h2>LA BATALLA<br><em>COMIENZA AQUÍ</em></h2><p>Prepárate para entrar en las Pirámides del Desierto.</p><button class="play-button" id="playBtn">▶ JUGAR</button></div><div class="lobby-season">TEMPORADA 01 <b>·</b> DESIERTO</div></div>
-  <div class="lobby-options"><div class="queue-card"><span class="queue-icon">⚔️</span><div><strong>ENTRENAMIENTO</strong><small>1 jugador · Bots de práctica</small></div><span class="queue-ready">DISPONIBLE</span></div><div class="queue-card"><span class="queue-icon">🏜️</span><div><strong>PIRÁMIDES DEL DESIERTO</strong><small>Mapa seleccionado</small></div><span class="queue-ready">MAPA 01</span></div></div>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#10182b">
+<title>BloxWorld · Battle Arena</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar" id="lobbyHeader">
+  <a class="brand" href="#" aria-label="BloxWorld inicio"><span class="brand-cube">B</span><span>BLOX<em>WORLD</em></span></a>
+  <div class="top-actions"><div class="wallet">◆ <b id="coinCount">500</b><small> BB</small></div><button class="icon-button" id="shopOpen" aria-label="Abrir tienda">♜ <span>TIENDA</span></button></div>
+</header>
+<main id="lobby" class="lobby">
+  <section class="lobby-hero">
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#6e91ae"/><stop offset=".52" stop-color="#e9a56c"/><stop offset="1" stop-color="#f2c17e"/></linearGradient>
+          <linearGradient id="sand" x2="0" y2="1"><stop stop-color="#dca263"/><stop offset="1" stop-color="#80513b"/></linearGradient>
+          <linearGradient id="pyr" x2="1" y2="1"><stop stop-color="#f0c17d"/><stop offset="1" stop-color="#a96d45"/></linearGradient>
+        </defs>
+        <rect width="1000" height="600" fill="url(#sky)"/>
+        <circle cx="760" cy="145" r="66" fill="#ffe6ae" opacity=".9"/>
+        <path d="M0 350 Q170 275 330 355 T680 340 T1000 350 V600 H0Z" fill="#bf8457"/>
+        <path d="M0 410 Q210 315 420 410 T800 385 T1100 420 V600 H0Z" fill="url(#sand)"/>
+        <path d="M90 470 L250 220 L420 470Z" fill="#b67a4c"/><path d="M250 220 L420 470 L250 430Z" fill="#875338"/>
+        <path d="M380 465 L590 125 L810 465Z" fill="url(#pyr)"/><path d="M590 125 L810 465 L590 415Z" fill="#9b613e"/>
+        <path d="M690 485 L810 290 L940 485Z" fill="#c18a59"/><path d="M810 290 L940 485 L810 450Z" fill="#8d593d"/>
+        <path d="M0 510 Q200 420 400 510 T800 495 T1100 520 V600 H0Z" fill="#d69a5e"/>
+        <g fill="#4d7050"><path d="M110 420 l-8 -50 8 -38 8 38 -5 50Z"/><path d="M95 365 l-25 -24 32 12 11 22Z"/><path d="M126 364 l25 -28 -34 17 -8 22Z"/><path d="M900 445 l-7 -48 7 -40 8 40 -5 48Z"/><path d="M886 398 l-23 -22 30 11 10 22Z"/><path d="M912 397 l24 -26 -33 15 -8 24Z"/></g>
+        <g fill="#efc17f" opacity=".48"><path d="M0 550 Q230 485 460 555 T1000 545 V600 H0Z"/></g>
+      </svg>
+      <div class="art-vignette"></div>
+    </div>
+    <div class="hero-content">
+      <div class="season-tag"><span class="season-dot"></span> TEMPORADA 01 <i>·</i> NUEVO MAPA</div>
+      <h1>PIRÁMIDES<br><span>DEL DESIERTO</span></h1>
+      <p>Sobrevive a la arena. Encuentra a tus rivales. Domina la batalla.</p>
+      <button class="play-button" id="playBtn"><span>▶</span> JUGAR AHORA</button>
+      <div class="mode-caption">MODO ENTRENAMIENTO <b>•</b> 1 JUGADOR</div>
+    </div>
+    <div class="map-stamp"><b>01</b><span>DESIERTO<br>ARENA</span></div>
+  </section>
+  <section class="lobby-cards">
+    <article class="info-card"><div class="info-icon">⚔</div><div><b>ENTRENAMIENTO</b><small>Practica contra bots</small></div><span class="status-dot">●</span></article>
+    <article class="info-card"><div class="info-icon">🏜</div><div><b>MAPA SELECCIONADO</b><small>Pirámides del Desierto</small></div><span class="map-number">01</span></article>
+  </section>
+  <section class="lobby-footer"><span>🟦 BLOXWORLD BATTLE ARENA</span><span>PROTOTIPO JUGABLE · VERSIÓN 0.2</span></section>
+</main>
+
+<section class="game-screen" id="gameScreen" hidden>
+  <canvas id="game" aria-label="Mapa de Pirámides del Desierto"></canvas>
+  <div class="game-top-hud">
+    <button class="back-button" id="backLobbyBtn">‹ <span>LOBBY</span></button>
+    <div class="map-hud"><b>PIRÁMIDES DEL DESIERTO</b><small>ENTRENAMIENTO</small></div>
+    <div class="match-hud"><span class="health-icon">♥</span><b id="healthValue">100</b><small>HP</small><span class="hud-divider"></span><b>◆ <span id="gameCoins">500</span></b></div>
+  </div>
+  <div class="crosshair" aria-hidden="true"><i></i></div>
+  <div class="game-message" id="gameMessage">Encuentra a los bots. ¡Buena suerte!</div>
+  <div class="touch-hud">
+    <div class="joystick-wrap">
+      <div class="joystick" id="joystick"><div class="joystick-ring"></div><div class="joystick-thumb" id="joystickThumb"></div></div>
+      <span>MOVER</span>
+    </div>
+    <div class="action-hud">
+      <div class="small-actions">
+        <button class="round-action" id="crouchBtn"><span>▾</span><small>AGACHAR</small></button>
+        <button class="round-action" id="jumpBtn"><span>⬆</span><small>SALTAR</small></button>
+        <button class="round-action run-action" id="runBtn"><span>»</span><small>CORRER</small></button>
+      </div>
+      <button class="fire-button" id="shootBtn"><span>✦</span><b>DISPARAR</b></button>
+    </div>
+  </div>
+  <div class="look-hint">DESLIZA PARA MIRAR</div>
 </section>
-<section class="game-shell" id="gameScreen" hidden><div class="game-top"><span><i class="live-dot"></i> ARENA 3D · ENTRENAMIENTO</span><span id="health">♥ ♥ ♥</span><button class="back-lobby" id="backLobbyBtn">← LOBBY</button></div><div class="viewport" id="viewport"><canvas id="game" aria-label="Mundo 3D de BloxWorld"></canvas><div class="crosshair">+</div><div class="hud-label" id="gameMessage">Mapa nuevo: Pirámides del Desierto. ¡Busca a los bots!</div><div class="hit-flash" id="hitFlash"></div><div class="look-hint">Desliza aquí para mirar</div></div>
-<div class="game-bottom"><div class="move-controls"><button class="control" id="leftBtn">↶</button><button class="control" id="forwardBtn">▲</button><button class="control" id="backBtn">▼</button><button class="control" id="rightBtn">↷</button></div><div class="action-controls"><button class="action-btn" id="crouchBtn">▾ AGACHAR</button><button class="action-btn run-btn" id="runBtn">🏃 CORRER</button><button class="action-btn" id="jumpBtn">⬆ SALTAR</button></div><button class="shoot" id="shootBtn">✦ DISPARAR</button></div><p class="tip">En móvil: Pulsa JUGAR AHORA. Usa los controles para moverte, correr, agacharte y saltar. Desliza el área 3D para mirar. PC: WASD, Shift, Ctrl y espacio.</p></section>
-<section class="lower-grid"><article class="panel"><div class="panel-title"><div><span class="eyebrow">TU PERSONAJE</span><h2>Avatar cúbico</h2></div><span class="avatar-icon">🧍</span></div><p>Viste tu personaje con objetos de la tienda.</p><div class="equipped" id="equippedText">Equipado: Estilo clásico</div></article><article class="panel"><span class="eyebrow">CREA Y COMPARTE</span><h2>Tu idea, tu cosmético.</h2><p>Diseña un artículo de prueba y ponle precio en Bloxbux.</p><button class="primary" id="creatorOpen">＋ Crear cosmético</button></article></section>
-<section class="panel market-panel"><span class="eyebrow">HECHO POR LA COMUNIDAD</span><h2>Mercado de creadores</h2><div id="marketList" class="market-list"><p class="muted">Todavía no hay creaciones. ¡Sé el primero!</p></div></section><footer>BloxWorld · Prototipo 3D. Bloxbux son monedas virtuales de prueba.</footer></main>
-<div class="modal-backdrop" id="shopModal" hidden><section class="modal"><button class="close" data-close="shopModal">×</button><span class="eyebrow">PERSONALIZA TU AVATAR</span><h2>Tienda BloxWorld</h2><div id="shopItems" class="shop-items"></div><div class="skin-panel"><span class="eyebrow">SKINS DE ARMAS</span><h3>Aspecto de tu arma</h3><div id="weaponSkins" class="shop-items"></div></div></section></div>
-<div class="modal-backdrop" id="creatorModal" hidden><section class="modal"><button class="close" data-close="creatorModal">×</button><span class="eyebrow">TALLER DE CREADORES</span><h2>Publica un cosmético</h2><label for="cosmeticName">Nombre del artículo</label><input id="cosmeticName" maxlength="24" placeholder="Ej. Casco galáctico"><label for="cosmeticType">Tipo</label><select id="cosmeticType"><option value="🪖">Casco</option><option value="🕶️">Gafas</option><option value="🎒">Mochila</option><option value="👑">Sombrero</option><option value="👕">Camisa</option></select><label for="cosmeticPrice">Precio en Bloxbux (10–250)</label><input id="cosmeticPrice" type="number" min="10" max="250" value="50"><button class="primary full" id="publishCosmetic">Publicar artículo</button><p class="tiny">Las creaciones se guardan solo en este navegador. Publicación global y ventas entre jugadores requieren cuentas y servidor.</p></section></div>
-<script type="module" src="game.js"></script></body></html>
+
+<div class="modal-backdrop" id="shopModal" hidden>
+  <section class="shop-modal"><button class="modal-close" id="shopClose">×</button><div class="modal-kicker">BLOXWORLD STORE</div><h2>Tienda de objetos</h2><p>Personaliza tu partida con tus Bloxbux.</p>
+    <div class="store-row"><span>🪖</span><div><b>Casco del desierto</b><small>Protección cosmética</small></div><strong>120 BB</strong></div>
+    <div class="store-row"><span>🕶️</span><div><b>Gafas tácticas</b><small>Estilo de combate</small></div><strong>80 BB</strong></div>
+    <div class="store-row"><span>🎒</span><div><b>Mochila explorador</b><small>Equipo cosmético</small></div><strong>160 BB</strong></div>
+    <small class="store-note">La tienda es una demostración local; las compras no se guardan en una cuenta online.</small>
+  </section>
+</div>
+<script src="game.js" defer></script>
+</body></html>
