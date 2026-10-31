@@ -5,7 +5,7 @@ const lobby=$('lobby'), gameScreen=$('gameScreen'), canvas=$('game');
 const ctx=canvas.getContext('2d',{alpha:false});
 const coinsEl=$('coinCount'),gameCoinsEl=$('gameCoins'),message=$('gameMessage');
 let coins=500,playing=false,run=false,crouch=false;
-let selectedMap='desert',weaponSlot=0,inspectTime=0,lastShot=0,jumpVelocity=0,moveClock=0;
+let selectedMap='desert',weaponSlot=0,inspectTime=0,lastShot=0,jumpVelocity=0,moveClock=0,fireHeld=false;
 const weaponSlots=[{name:'AK-47',type:'rifle',rate:360,range:70,color:'#4c5b62'},{name:'UMP45',type:'smg',rate:220,range:48,color:'#526879'}];
 const weaponPool=[{name:'AK-47',type:'rifle',rate:360,range:70},{name:'UMP45',type:'smg',rate:220,range:48},{name:'Kar98k',type:'sniper',rate:900,range:110},{name:'M700',type:'sniper',rate:1000,range:125},{name:'MP5',type:'smg',rate:170,range:50},{name:'Uzi',type:'smg',rate:130,range:34},{name:'Cuchillo',type:'knife',rate:420,range:4.5}];
 let player={x:0,z:18,yaw:0,pitch:0};
@@ -15,6 +15,7 @@ let jumpPower=0,lastTime=0,damage=100;
 let targets=[];
 const savedBots=[[-5,-15],[5,-20],[-10,-29],[10,-34],[0,-43]];
 function setMessage(t){message.textContent=t}
+function spawnTargets(){const pts=selectedMap==='desert'?savedBots:selectedMap==='city'?[[-12,-20],[13,-28],[-20,-44],[22,-50],[0,-65]]:[[-14,-18],[14,-24],[-22,-40],[20,-48],[0,-60]];return pts.map((p,i)=>({x:p[0],z:p[1],alive:true,id:i}))}
 function currentWeapon(){return weaponSlots[weaponSlot]}
 function updateWeaponHud(){const w=currentWeapon();$('weaponName').textContent=w.name;$('weaponType').textContent=w.type==='knife'?'CUERPO A CUERPO':w.type==='sniper'?'PRECISIÓN · CERROJO':w.type==='smg'?'SUBFUSIL · AUTOMÁTICO':'FUSIL DE ASALTO';$('weaponSlotLabel').textContent=(weaponSlot+1)+' / 2';}
 function updateCoins(){coinsEl.textContent=coins;gameCoinsEl.textContent=coins}
@@ -27,7 +28,7 @@ window.addEventListener('resize',resize);
 function enterGame(){
  try {
  playing=true;run=false;crouch=false;player={x:0,z:18,yaw:0,pitch:0};jumpPower=0;jumpVelocity=0;weaponSlot=0;inspectTime=0;lastShot=0;
- targets=(selectedMap==='desert'?savedBots:selectedMap==='city'?[[-12,-20],[13,-28],[-20,-44],[22,-50],[0,-65]]:[[-14,-18],[14,-24],[-22,-40],[20,-48],[0,-60]]).map((p,i)=>({x:p[0],z:p[1],alive:true,id:i}));
+ targets=spawnTargets();
  $('runBtn').classList.remove('active');$('crouchBtn').classList.remove('active');
  $('lobbyHeader').hidden=true;lobby.hidden=true;gameScreen.hidden=false;
  document.body.style.overflow='hidden';resize();updateCoins();updateWeaponHud();$('mapTitle').textContent=selectedMap==='desert'?'PIRÁMIDES DEL DESIERTO':selectedMap==='city'?'CIUDAD NEÓN':'ISLA TROPICAL';setMessage('Explora el mapa y prueba tu equipo');
@@ -52,7 +53,8 @@ $('arsenalBtn').addEventListener('click',()=>{$('arsenalPanel').hidden=!$('arsen
 document.querySelectorAll('.equip-weapon').forEach(btn=>btn.addEventListener('click',()=>{weaponSlots[weaponSlot]=weaponPool[Number(btn.dataset.weapon)];updateWeaponHud();$('arsenalPanel').hidden=true;setMessage(weaponSlots[weaponSlot].name+' equipado en espacio '+(weaponSlot+1))}));
 $('inspectBtn').addEventListener('click',()=>{inspectTime=1;setMessage('Inspeccionando '+currentWeapon().name)});
 document.querySelectorAll('.map-option').forEach(btn=>btn.addEventListener('click',()=>{selectedMap=btn.dataset.map;document.querySelectorAll('.map-option').forEach(b=>b.classList.toggle('selected',b===btn));const names={desert:'PIRÁMIDES DEL DESIERTO',city:'CIUDAD NEÓN',island:'ISLA TROPICAL'};$('lobbyMapName').textContent=names[selectedMap];$('lobbyMapNumber').textContent=selectedMap==='desert'?'01':selectedMap==='city'?'02':'03';}));
-$('shootBtn').addEventListener('pointerdown',e=>{e.preventDefault();shoot()});
+$('shootBtn').addEventListener('pointerdown',e=>{e.preventDefault();fireHeld=true;shoot()});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>$('shootBtn').addEventListener(ev,()=>{fireHeld=false}));
 
 function joystickPoint(e){
  const r=$('joystick').getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
@@ -85,7 +87,7 @@ function shoot(){
  for(const t of targets){if(!t.alive)continue;const dx=t.x-player.x,dz=t.z-player.z,dist=Math.hypot(dx,dz),ang=wrapAngle(Math.atan2(-dx,-dz)-player.yaw);
   if(dist<bestDist&&Math.abs(ang)<bestAngle){best=t;bestAngle=Math.abs(ang);bestDist=dist}
  }
- if(best){best.alive=false;inspectTime=0;coins+=25;updateCoins();setMessage('¡Bot eliminado! +25 Bloxbux');if(targets.every(t=>!t.alive)){targets=savedBots.map((p,i)=>({x:p[0],z:p[1],alive:true,id:i}));setMessage('¡Nueva ronda! Los bots han vuelto.')}}else setMessage('No diste en el blanco. Ajusta la mira y dispara.');
+ if(best){best.alive=false;inspectTime=0;coins+=25;updateCoins();setMessage('¡Bot eliminado! +25 Bloxbux');if(targets.every(t=>!t.alive)){targets=spawnTargets();setMessage('¡Nueva ronda! Los bots han vuelto.')}}else setMessage('No diste en el blanco. Ajusta la mira y dispara.');
 }
 function project(x,y,z,w,h){
  const dx=x-player.x,dz=z-player.z,cs=Math.cos(player.yaw),sn=Math.sin(player.yaw);
@@ -166,6 +168,7 @@ function drawScene(w,h,dt){
 function tick(time){
  const dt=Math.min(.04,(time-lastTime)/1000||.016);lastTime=time;
  if(playing){
+  if(fireHeld)shoot();
   let f=-joy.y,s=joy.x;
   if(keys.w||keys.arrowup)f=1;if(keys.s||keys.arrowdown)f=-1;if(keys.a||keys.arrowleft)s=-1;if(keys.d||keys.arrowright)s=1;
   const speed=run ? 0.22 : 0.105;
