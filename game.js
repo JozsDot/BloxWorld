@@ -111,7 +111,7 @@ function applySoldier(target,entity){
  const scale=2.05/Math.max(size.y,.01);model.scale.setScalar(scale);
  model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);
  target.clear();target.add(model);
- entity.mixer=new THREE.AnimationMixer(model);entity.actions={};
+ entity.mixer=new THREE.AnimationMixer(model);entity.actions={};target.userData.mixer=entity.mixer;target.userData.actions=entity.actions;
  for(const clip of soldierAnimations){const action=entity.mixer.clipAction(clip);entity.actions[clip.name.toLowerCase()]=action;}
  const idle=Object.keys(entity.actions).find(n=>n.includes('idle'))||Object.keys(entity.actions)[0];
  if(idle)entity.actions[idle].play();
@@ -302,7 +302,7 @@ function animate(){
   const targetY=slideTimer>0?.78:crouch?1.05:1.7;playerY+=(targetY-playerY)*Math.min(1,dt*(slideTimer>0?18:12));
   const moving=Math.hypot(f,s)>.08;walkTime+=moving?dt*(run?13:8):0;
   if(playerAvatar){playerAvatar.position.set(player.x,slideTimer>0?-.42:crouch?-.22:0,player.z);playerAvatar.rotation.y=yaw;const swing=moving?Math.sin(walkTime)*.62:0;avatarLimbs[0].rotation.x=swing;avatarLimbs[1].rotation.x=-swing;avatarLimbs[2].rotation.x=-swing;avatarLimbs[3].rotation.x=swing;}
-  if(playerAvatar&&playerAvatar.userData.mixer)playerAvatar.userData.mixer.update(dt);
+  if(playerAvatar&&playerAvatar.userData.mixer){setSoldierAction(playerAvatar.userData,slideTimer>0?'crouch':moving?(run?'run':'walk'):'idle');playerAvatar.userData.mixer.update(dt);}
   camera.position.set(player.x+Math.sin(yaw)*4.2,playerY+2.05,player.z+Math.cos(yaw)*4.2);camera.rotation.order='YXZ';camera.rotation.set(pitch+recoil,yaw,0);recoil=Math.max(0,recoil-dt*.24);
   if(weaponGroup){weaponBob=moving?Math.sin(walkTime)*.018:0;weaponKick=Math.max(0,weaponKick-dt*4.5);weaponGroup.position.set(.48,-.48+weaponBob+(inspect?Math.sin((1-inspect)*Math.PI)*.3:0),-.88+weaponKick);weaponGroup.rotation.set(-.08-weaponKick*.55,-.08,Math.sin(walkTime)*.012+(inspect?Math.sin((1-inspect)*Math.PI)*.7:0));}
   if(inspect>0)inspect=Math.max(0,inspect-dt*1.6);
