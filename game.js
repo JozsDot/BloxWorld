@@ -230,7 +230,33 @@ function addTacticalGear(target){
  part(new THREE.BoxGeometry(.3,.06,.24),dark,0,1.59,.22);
  target.add(gear);
 }
-function applySoldier(target,entity){if(!soldierTemplate)return;const model=skeletonClone?skeletonClone(soldierTemplate):soldierTemplate.clone(true),bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3()),scale=2.05/Math.max(size.y,.01);model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);target.clear();target.add(model);addTacticalGear(target);addAdvancedSoldierDetails(target);entity.mixer=new THREE.AnimationMixer(model);entity.actions={};target.userData.mixer=entity.mixer;target.userData.actions=entity.actions;for(const clip of soldierAnimations)entity.actions[clip.name.toLowerCase()]=entity.mixer.clipAction(clip);const idle=Object.keys(entity.actions).find(n=>n.includes('idle'))||Object.keys(entity.actions)[0];if(idle)entity.actions[idle].play();entity.currentAction=idle;target.userData.currentAction=idle;if(target===playerAvatar&&weaponGroup&&cameraMode==='third'){target.add(weaponGroup);weaponGroup.position.set(.42,1.34,-.28);weaponGroup.rotation.y=Math.PI;weaponGroup.scale.setScalar(.68)}}
+function addCombatAccessories(target){
+ const g=new THREE.Group();
+ const armor=new THREE.MeshStandardMaterial({color:0x27383a,roughness:.9});
+ const fabric=new THREE.MeshStandardMaterial({color:0x56604a,roughness:1});
+ const rubber=new THREE.MeshStandardMaterial({color:0x151e24,roughness:.86});
+ const metal=new THREE.MeshStandardMaterial({color:0x87949a,metalness:.62,roughness:.38});
+ const add=(geo,material,x,y,z,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;g.add(m)};
+ // Casco con soporte frontal y dos módulos de visión nocturna
+ add(new THREE.BoxGeometry(.19,.09,.12),rubber,0,2.22,-.2);
+ for(const x of [-.065,.065]){
+  add(new THREE.CylinderGeometry(.035,.035,.075,10),metal,x,2.19,-.28,1,1,.8);
+  add(new THREE.CylinderGeometry(.025,.025,.012,10),new THREE.MeshBasicMaterial({color:0x6dc8b5}),x,2.19,-.32);
+ }
+ // Hombreras, rodilleras, bolsillos y radio de comunicaciones
+ for(const x of [-.43,.43]){
+  add(new THREE.SphereGeometry(.17,10,8),armor,x,1.67,0,1.2,.72,1);
+  add(new THREE.BoxGeometry(.24,.2,.16),fabric,x,.72,-.13);
+ }
+ for(const x of [-.23,0,.23]){
+  add(new THREE.BoxGeometry(.15,.19,.09),fabric,x,1.1,-.31);
+  add(new THREE.BoxGeometry(.13,.035,.1),rubber,x,1.19,-.32);
+ }
+ add(new THREE.BoxGeometry(.13,.28,.12),rubber,.39,1.48,.02);
+ const antenna=new THREE.Mesh(new THREE.CylinderGeometry(.008,.012,.42,6),metal);antenna.position.set(.42,1.82,.04);antenna.rotation.z=-.08;g.add(antenna);
+ target.add(g);
+}
+function applySoldier(target,entity){if(!soldierTemplate)return;const model=skeletonClone?skeletonClone(soldierTemplate):soldierTemplate.clone(true),bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3()),scale=2.05/Math.max(size.y,.01);model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);target.clear();target.add(model);addTacticalGear(target);addAdvancedSoldierDetails(target);addCombatAccessories(target);entity.mixer=new THREE.AnimationMixer(model);entity.actions={};target.userData.mixer=entity.mixer;target.userData.actions=entity.actions;for(const clip of soldierAnimations)entity.actions[clip.name.toLowerCase()]=entity.mixer.clipAction(clip);const idle=Object.keys(entity.actions).find(n=>n.includes('idle'))||Object.keys(entity.actions)[0];if(idle)entity.actions[idle].play();entity.currentAction=idle;target.userData.currentAction=idle;if(target===playerAvatar&&weaponGroup&&cameraMode==='third'){target.add(weaponGroup);weaponGroup.position.set(.42,1.34,-.28);weaponGroup.rotation.y=Math.PI;weaponGroup.scale.setScalar(.68)}}
 function setSoldierAction(entity,kind){
  if(!entity.actions)return;
  const key=Object.keys(entity.actions).find(n=>n===kind||n.includes(kind));
@@ -310,23 +336,38 @@ function renderScopeOptions(){
  }));
 }
 function attachWeaponOptic(group,name){
- if(!group)return;
- const zoom=weaponScopes[name]||1;
- if(zoom===1)return;
- const optic=new THREE.Group();
- const body=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.22,16),new THREE.MeshStandardMaterial({color:0x202a30,metalness:.75,roughness:.28}));
- body.rotation.x=Math.PI/2;body.position.set(0,.17,-.1);optic.add(body);
- const glass=new THREE.Mesh(new THREE.CylinderGeometry(.058,.058,.012,16),new THREE.MeshPhysicalMaterial({color:0x72c8e6,metalness:.3,roughness:.12,transparent:true,opacity:.7,clearcoat:1}));
- glass.rotation.x=Math.PI/2;glass.position.set(0,.17,-.218);optic.add(glass);
- const rail=new THREE.Mesh(new THREE.BoxGeometry(.18,.035,.34),new THREE.MeshStandardMaterial({color:0x161d22,metalness:.55,roughness:.5}));
- rail.position.set(0,.105,-.1);optic.add(rail);group.add(optic);
+ if(!group||name==='Cuchillo')return;
+ const zoom=weaponScopes[name]||1,optic=new THREE.Group();
+ const metal=new THREE.MeshStandardMaterial({color:0x202a30,metalness:.78,roughness:.27});
+ const dark=new THREE.MeshStandardMaterial({color:0x111a20,metalness:.58,roughness:.42});
+ const glass=new THREE.MeshPhysicalMaterial({color:zoom>=6?0x83b9d0:0x6cc5db,metalness:.22,roughness:.1,transparent:true,opacity:.72,clearcoat:1,emissive:0x12303b,emissiveIntensity:.18});
+ const rail=new THREE.Mesh(new THREE.BoxGeometry(.2,.035,.38),dark);rail.position.set(0,.105,-.1);optic.add(rail);
+ const tubeLength=zoom>=6?.34:zoom>=2?.24:.14;
+ const body=new THREE.Mesh(new THREE.CylinderGeometry(zoom>=6?.082:.067,zoom>=6?.082:.067,tubeLength,18),metal);
+ body.rotation.x=Math.PI/2;body.position.set(0,.18,-.1);optic.add(body);
+ for(const z of [-.1-tubeLength/2,-.1+tubeLength/2]){
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(zoom>=6?.083:.069,.012,8,20),dark);
+  ring.position.set(0,.18,z);optic.add(ring);
+ }
+ const lens=new THREE.Mesh(new THREE.CylinderGeometry(zoom>=6?.061:.05,zoom>=6?.061:.05,.008,18),glass);
+ lens.rotation.x=Math.PI/2;lens.position.set(0,.18,-.1-tubeLength/2-.006);optic.add(lens);
+ if(zoom===1){
+  const hood=new THREE.Mesh(new THREE.BoxGeometry(.13,.045,.12),dark);hood.position.set(0,.24,-.1);optic.add(hood);
+  const dot=new THREE.Mesh(new THREE.SphereGeometry(.012,8,6),new THREE.MeshBasicMaterial({color:0xff453c}));dot.position.set(0,.18,-.1-tubeLength/2-.012);optic.add(dot);
+ }
+ group.add(optic);
 }
 function updateAimView(){
  if(!camera)return;
  const aimButton=$('aimBtn');if(aimButton)aimButton.classList.toggle('active',aiming);
- const zoom=aiming?(weaponScopes[slots[weaponSlot]]||1):1;
+ const weapon=slots[weaponSlot],zoom=aiming?(weaponScopes[weapon]||1):1;
+ const type=zoom>=6?'sniper':zoom>=2?'holo':(['UMP45','MP5','Uzi'].includes(weapon)?'dot':'cross');
  scopeZoom=zoom;camera.fov=baseFov/zoom;camera.updateProjectionMatrix();
  const overlay=$('scopeOverlay');if(overlay)overlay.classList.toggle('visible',aiming&&zoom>1);
+ const crosshair=document.querySelector('.crosshair');
+ if(crosshair)crosshair.className='crosshair reticle-'+type;
+ const lens=document.querySelector('.scope-lens');
+ if(lens){lens.className='scope-lens reticle-'+type;lens.innerHTML='<i></i><span class="reticle-hash"></span><b>×'+zoom+'</b>';}
  const label=$('aimBtn')?.querySelector('small');if(label)label.textContent=aiming?'CERRAR MIRA':'APUNTAR';
  const mag=$('scopeMagnification');if(mag)mag.textContent='×'+zoom;
 }
