@@ -1,0 +1,11 @@
+name = "bloxshoot-multiplayer"
+main = "server/worker.js"
+compatibility_date = "2026-10-31"
+
+[[durable_objects.bindings]]
+name = "GAME_ROOMS"
+class_name = "GameRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["GameRoom"]
