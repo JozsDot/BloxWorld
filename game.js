@@ -5,7 +5,7 @@ const canvas=$('game'),lobby=$('lobby'),screen=$('gameScreen');
 let scene,camera,renderer,clock,worldGroup,weaponGroup,GLTFLoaderClass=null,skeletonClone=null,soldierTemplate=null,soldierAnimations=[],weaponTemplates={};
 let playing=false,run=false,crouch=false,jumpV=0,playerY=1.7,jumpOffset=0,cameraMode='third';
 let yaw=0,pitch=0,lastShot=0,fireHeld=false,inspect=0,coins=500,aiming=false,aimReturnMode='third',scopeZoom=1,baseFov=76,scopeOverlay=null;
-let selectedMap='desert',weaponSlot=0;
+let selectedMap='desert',selectedGameMode='battle',weaponSlot=0;
 const slots=['AK-47','UMP45'];
 const ammoState={'AK-47':{mag:30,reserve:120},UMP45:{mag:25,reserve:125},Kar98k:{mag:5,reserve:35},M700:{mag:5,reserve:35},MP5:{mag:30,reserve:150},Uzi:{mag:32,reserve:160},Cuchillo:{mag:0,reserve:0}};
 let reloading=false,reloadTimer=null;
@@ -452,6 +452,7 @@ function enterGame(){
  if(!renderer&&!init3D()){return}
  playing=true;run=false;crouch=false;jumpV=0;jumpOffset=0;playerY=1.7;yaw=0;pitch=0;player={x:0,z:18};playerHealth=100;$('healthValue').textContent='100';camera.position.set(0,3.9,22);camera.rotation.set(0,0,0);if(playerAvatar)playerAvatar.position.set(0,0,18);weaponSlot=0;equipWeapon();updateCoins();
  $('mapTitle').textContent=selectedMap==='desert'?'PIRÁMIDES DEL DESIERTO':selectedMap==='city'?'CIUDAD NEÓN':'ISLA TROPICAL';
+ $('matchModeLabel').textContent=selectedGameMode==='battle'?'BATTLE ROYALE · PROTOTIPO':'COMBATE POR EQUIPOS · PROTOTIPO';
  buildWorld();equipWeapon();setMessage(pendingOnlineRoom?'CONECTANDO A SALA '+pendingOnlineRoom:'ESCENA 3D ACTIVA · USA VARIOS DEDOS PARA JUGAR');
  if(pendingOnlineRoom){connectMultiplayer(pendingOnlineRoom);pendingOnlineRoom=null}
 }
@@ -464,6 +465,7 @@ $('shopOpen').addEventListener('click',()=>$('shopModal').hidden=false);
 $('shopClose').addEventListener('click',()=>$('shopModal').hidden=true);
 $('shopModal').addEventListener('click',e=>{if(e.target===$('shopModal'))$('shopModal').hidden=true});
 document.querySelectorAll('.map-option').forEach(b=>b.addEventListener('click',()=>{selectedMap=b.dataset.map;document.querySelectorAll('.map-option').forEach(x=>x.classList.toggle('selected',x===b));const n={desert:'PIRÁMIDES DEL DESIERTO',city:'CIUDAD NEÓN',island:'ISLA TROPICAL'};$('lobbyMapName').textContent=n[selectedMap];$('lobbyMapNumber').textContent=selectedMap==='desert'?'01':selectedMap==='city'?'02':'03'}));
+document.querySelectorAll('.mode-option').forEach(b=>b.addEventListener('click',()=>{selectedGameMode=b.dataset.mode;document.querySelectorAll('.mode-option').forEach(x=>{const active=x===b;x.classList.toggle('selected',active);x.setAttribute('aria-pressed',String(active))});$('lobbyModeName').textContent=selectedGameMode==='battle'?'BATTLE ROYALE':'COMBATE POR EQUIPOS'}));
 $('cameraBtn').addEventListener('pointerdown',e=>{e.preventDefault();cameraMode=cameraMode==='third'?'first':'third';equipWeapon();$('cameraBtn').querySelector('small').textContent=cameraMode==='third'?'TERCERA PERSONA':'PRIMERA PERSONA';setMessage(cameraMode==='third'?'CÁMARA EN TERCERA PERSONA':'CÁMARA EN PRIMERA PERSONA')});
 $('switchBtn').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();weaponSlot=1-weaponSlot;equipWeapon();setMessage('CAMBIASTE A '+slots[weaponSlot].toUpperCase())});
 $('arsenalBtn').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();$('arsenalPanel').hidden=!$('arsenalPanel').hidden});
