@@ -201,3 +201,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .game-message{padding:9px 15px;border:1px solid #d7eff533;border-radius:20px;background:#081522d4;backdrop-filter:blur(10px);font-size:9px;letter-spacing:1px}
 @media(max-width:600px){.game-top-hud{padding-left:8px;padding-right:8px}.map-hud{padding:7px 8px}.map-hud b{font-size:7px}.match-hud{padding:7px 8px}.weapon-tools{right:7px;gap:3px;max-width:60vw}.tool-button{min-width:46px;min-height:42px;padding:4px}.tool-button small{font-size:5px}.weapon-hud{right:8px;padding:6px 8px}.game-message{font-size:7px}}
 @media(orientation:landscape){.weapon-tools{top:calc(env(safe-area-inset-top) + 58px)}.arsenal-panel{top:calc(env(safe-area-inset-top) + 112px)}}
+
+#reloadBtn{border-color:#e6c17b88}#reloadBtn.active{background:linear-gradient(145deg,#a56b28,#573d25);border-color:#ffe0a0}
+.ammo-info b{min-width:42px;text-align:center;font-variant-numeric:tabular-nums}
+@media(max-width:600px){#reloadBtn{min-width:44px}.weapon-tools{max-width:65vw}}
