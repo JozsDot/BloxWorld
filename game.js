@@ -18,16 +18,19 @@ const weaponData=[
 ];
 let player={x:0,z:18};
 let joy={x:0,y:0,id:null},look={id:null,x:0,y:0};
-let bots=[],botMeshes=[],keys={};
+let bots=[],botMeshes=[],keys={},colliders=[];
+let playerHealth=100;
 const raycaster=new THREE.Raycaster();
 const materials={};
 function mat(color,roughness=1){const key=color+'_'+roughness;if(!materials[key])materials[key]=new THREE.MeshStandardMaterial({color,roughness,metalness:0.02});return materials[key]}
 function box(parent,x,y,z,sx,sy,sz,color){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat(color));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 function cylinder(parent,x,y,z,r1,r2,h,color,segments=8){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,segments),mat(color));m.position.set(x,y,z);m.castShadow=true;parent.add(m);return m}
 function addPyramid(x,z,size,height){
+ colliders.push({minX:x-size*.72,maxX:x+size*.72,minZ:z-size*.72,maxZ:z+size*.72});
  const m=new THREE.Mesh(new THREE.ConeGeometry(size,height,4,1),mat(0xb8895d));m.rotation.y=Math.PI/4;m.position.set(x,height/2,z);m.castShadow=true;m.receiveShadow=true;worldGroup.add(m);
 }
 function addBuilding(x,z,w,h,d,color){
+ colliders.push({minX:x-w/2-.25,maxX:x+w/2+.25,minZ:z-d/2-.25,maxZ:z+d/2+.25});
  const b=box(worldGroup,x,h/2,z,w,h,d,color);
  box(worldGroup,x,h+0.12,z,w+0.3,.24,d+0.3,0x43596c);
  for(let y=1.6;y<h-1;y+=2.2)for(let dx=-w/2+1;dx<w/2-.5;dx+=2.2){
@@ -54,7 +57,7 @@ function addBot(x,z,index){
 }
 function clearWorld(){
  if(worldGroup){scene.remove(worldGroup);worldGroup.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
- worldGroup=new THREE.Group();scene.add(worldGroup);bots=[];
+ worldGroup=new THREE.Group();scene.add(worldGroup);bots=[];colliders=[];
 }
 function buildWorld(){
  clearWorld();
@@ -74,7 +77,7 @@ function buildWorld(){
   const water=new THREE.Mesh(new THREE.PlaneGeometry(220,65),mat(0x3999a8,.4));water.rotation.x=-Math.PI/2;water.position.set(0,.02,-95);worldGroup.add(water);
  }
  // Volumetric cover blocks.
- [[-5,-13],[7,-24],[-15,-32],[15,-39],[2,-48]].forEach((p,i)=>box(worldGroup,p[0],.9,p[1],2.8,1.8,2.8,i%2?0x80664d:0x9c7957));
+ [[-5,-13],[7,-24],[-15,-32],[15,-39],[2,-48]].forEach((p,i)=>{colliders.push({minX:p[0]-1.65,maxX:p[0]+1.65,minZ:p[1]-1.65,maxZ:p[1]+1.65});box(worldGroup,p[0],.9,p[1],3.3,1.8,3.3,i%2?0x80664d:0x9c7957)});
  const pts=selectedMap==='desert'?[[-5,-15],[5,-20],[-10,-29],[10,-34],[0,-43]]:selectedMap==='city'?[[-12,-20],[13,-28],[-20,-44],[22,-50],[0,-65]]:[[-14,-18],[14,-24],[-22,-40],[20,-48],[0,-60]];
  pts.forEach((p,i)=>addBot(p[0],p[1],i));
  scene.add(new THREE.AmbientLight(0xffffff,.18));
@@ -125,7 +128,7 @@ function init3D(){
 function enterGame(){
  $('lobbyHeader').hidden=true;lobby.hidden=true;screen.hidden=false;document.body.style.overflow='hidden';
  if(!renderer&&!init3D()){return}
- playing=true;run=false;crouch=false;jumpV=0;playerY=1.7;yaw=0;pitch=0;player={x:0,z:18};camera.position.set(0,playerY,18);camera.rotation.set(0,0,0);weaponSlot=0;equipWeapon();updateCoins();
+ playing=true;run=false;crouch=false;jumpV=0;playerY=1.7;yaw=0;pitch=0;player={x:0,z:18};playerHealth=100;$('healthValue').textContent='100';camera.position.set(0,playerY,18);camera.rotation.set(0,0,0);weaponSlot=0;equipWeapon();updateCoins();
  $('mapTitle').textContent=selectedMap==='desert'?'PIRÁMIDES DEL DESIERTO':selectedMap==='city'?'CIUDAD NEÓN':'ISLA TROPICAL';
  buildWorld();equipWeapon();setMessage('ESCENA 3D ACTIVA · USA VARIOS DEDOS PARA JUGAR');
 }
@@ -168,6 +171,38 @@ function shoot(){
  const hits=raycaster.intersectObjects(bots.filter(b=>b.alive).map(b=>b.group),true);
  if(hits.length){let root=hits[0].object;while(root.parent&&root.parent!==worldGroup)root=root.parent;const b=bots.find(v=>v.group===root);if(b){b.alive=false;b.group.visible=false;coins+=25;updateCoins();setMessage('BOT ELIMINADO +25 BB')}}else setMessage('DISPARO · AJUSTA LA MIRA');
 }
+function collidesAt(x,z){
+ const r=.43;
+ if(x < -58+r || x > 58-r || z < -112+r || z > 26-r) return true;
+ for(const c of colliders){
+  const px=Math.max(c.minX,Math.min(x,c.maxX)),pz=Math.max(c.minZ,Math.min(z,c.maxZ));
+  const dx=x-px,dz=z-pz;
+  if(dx*dx+dz*dz<r*r)return true;
+ }
+ return false;
+}
+function moveWithCollision(dx,dz){
+ const nx=player.x+dx,nz=player.z+dz;
+ if(!collidesAt(nx,player.z))player.x=nx;
+ if(!collidesAt(player.x,nz))player.z=nz;
+}
+function hurtPlayer(amount){
+ playerHealth=Math.max(0,playerHealth-amount);$('healthValue').textContent=String(playerHealth);
+ if(playerHealth===0){playing=false;setMessage('TE ELIMINARON · VUELVE AL LOBBY PARA REINTENTAR');}
+}
+function updateBots(dt){
+ for(const b of bots){
+  if(!b.alive)continue;
+  const dx=player.x-b.x,dz=player.z-b.z,dist=Math.hypot(dx,dz);
+  b.group.rotation.y=Math.atan2(dx,dz);
+  if(dist>5.5&&dist<34){
+   const speed=dist>12?1.25:.55,step=speed*dt,tx=b.x+dx/dist*step,tz=b.z+dz/dist*step;
+   if(!collidesAt(tx,tz)){b.x=tx;b.z=tz;b.group.position.set(b.x,0,b.z);}
+  }
+  b.cooldown=(b.cooldown||0)-dt;
+  if(dist<26&&b.cooldown<=0){b.cooldown=1.35+Math.random()*.8;if(Math.random()>.38)hurtPlayer(4);}
+ }
+}
 function animate(){
  requestAnimationFrame(animate);if(!renderer||!scene)return;const dt=Math.min(clock.getDelta(),.04);
  if(playing){
@@ -176,15 +211,15 @@ function animate(){
   if(keys.w||keys.arrowup)f=1;if(keys.s||keys.arrowdown)f=-1;if(keys.a||keys.arrowleft)s=-1;if(keys.d||keys.arrowright)s=1;
   const len=Math.hypot(f,s)||1;if(len>1){f/=len;s/=len}
   const speed=crouch?2.0:run?7.4:4.1;
-  player.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)*speed*dt;
-  player.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)*speed*dt;
-  player.x=Math.max(-58,Math.min(58,player.x));player.z=Math.max(-112,Math.min(26,player.z));
+  const dx=(-Math.sin(yaw)*f+Math.cos(yaw)*s)*speed*dt;
+  const dz=(-Math.cos(yaw)*f-Math.sin(yaw)*s)*speed*dt;
+  moveWithCollision(dx,dz);
   jumpV-=16*dt;playerY+=jumpV*dt;if(playerY<1.7){playerY=1.7;jumpV=0}
   const targetY=crouch?1.05:1.7;playerY+=(targetY-playerY)*Math.min(1,dt*12);
   camera.position.set(player.x,playerY,player.z);camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);
   if(weaponGroup){weaponGroup.position.y=-.48+(inspect?Math.sin((1-inspect)*Math.PI)*.3:0);weaponGroup.rotation.z=inspect?Math.sin((1-inspect)*Math.PI)*.7:0}
   if(inspect>0)inspect=Math.max(0,inspect-dt*1.6);
-  // Bots stay fixed in orientation: no camera tracking behavior.
+  updateBots(dt);
  }
  renderer.render(scene,camera);
 }
