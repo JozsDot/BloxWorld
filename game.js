@@ -266,7 +266,7 @@ function updateBots(dt){
   if(b.limbs){const swing=Math.sin(b.phase)*.62;b.limbs[0].rotation.x=swing;b.limbs[1].rotation.x=-swing;b.limbs[2].rotation.x=-swing;b.limbs[3].rotation.x=swing}
   if(dist>5.5&&dist<34){const speed=dist>12?1.8:1.05,step=speed*dt,tx=b.x+dx/dist*step,tz=b.z+dz/dist*step;if(!collidesAt(tx,tz,b)){b.x=tx;b.z=tz;b.group.position.set(b.x,0,b.z)}}
   b.cooldown=(b.cooldown||0)-dt;
-  if(dist<30&&b.cooldown<=0){b.cooldown=1.3+Math.random()*.8;if(Math.random()>.22)hurtPlayer(4)}
+  if(dist<30&&b.cooldown<=0){b.cooldown=1.45+Math.random()*.7;const origin=new THREE.Vector3(b.x,1.45,b.z),target=new THREE.Vector3(player.x,1.05+jumpOffset,player.z),dir=target.sub(origin).normalize(),shot=new THREE.Mesh(new THREE.SphereGeometry(.045,6,6),new THREE.MeshBasicMaterial({color:0xff765d}));shot.position.copy(origin);worldGroup.add(shot);enemyProjectiles.push({mesh:shot,dir,life:2.2,speed:25})}
  }
 }
 function animate(){
