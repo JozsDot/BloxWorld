@@ -327,7 +327,6 @@ $('runBtn').addEventListener('pointerdown',e=>{e.preventDefault();run=!run;$('ru
 $('crouchBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(run){slideTimer=.95;slideSpeed=12.4;crouch=true;run=false;$('runBtn').classList.remove('active');setMessage('¡DESLIZAMIENTO!')}else{crouch=!crouch;slideTimer=0}$('crouchBtn').classList.toggle('active',crouch)});
 $('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(jumpOffset<=.02){jumpV=7.1;slideTimer=0;crouch=false;$('crouchBtn').classList.remove('active')}$('jumpBtn').classList.add('active');setTimeout(()=>$('jumpBtn').classList.remove('active'),160)});
 $('shootBtn').addEventListener('pointerdown',e=>{e.preventDefault();$('shootBtn')._firePointerId=e.pointerId;fireHeld=true;shoot()});
-$('shootBtn').addEventListener('pointerdown',e=>{e.preventDefault();fireHeld=true;shoot()});
 ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>window.addEventListener(ev,e=>{if(e.pointerId===$('shootBtn')._firePointerId)fireHeld=false}));
 const joyEl=$('joystick');
 function joyMove(e){const r=joyEl.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,m=r.width*.34,l=Math.hypot(dx,dy)||1,k=Math.min(1,m/l);joy.x=dx*k/m;joy.y=dy*k/m;$('joystickThumb').style.transform='translate(calc(-50% + '+joy.x*m+'px),calc(-50% + '+joy.y*m+'px))'}
