@@ -10,17 +10,17 @@ const slots=['AK-47','UMP45'];
 const ammoState={'AK-47':{mag:30,reserve:120},UMP45:{mag:25,reserve:125},Kar98k:{mag:5,reserve:35},M700:{mag:5,reserve:35},MP5:{mag:30,reserve:150},Uzi:{mag:32,reserve:160},Cuchillo:{mag:0,reserve:0}};
 let reloading=false,reloadTimer=null;
 const weaponData=[
- {name:'AK-47',kind:'rifle',rate:330,color:0x46545b},
- {name:'UMP45',kind:'smg',rate:210,color:0x354b5a},
- {name:'Kar98k',kind:'sniper',rate:850,color:0x69523e},
- {name:'M700',kind:'sniper',rate:900,color:0x3d4a53},
- {name:'MP5',kind:'smg',rate:170,color:0x354c5e},
- {name:'Uzi',kind:'smg',rate:125,color:0x4c555b},
+ {name:'AK-47',kind:'rifle',rate:330,mag:30,color:0x46545b},
+ {name:'UMP45',kind:'smg',rate:210,mag:25,color:0x354b5a},
+ {name:'Kar98k',kind:'sniper',rate:850,mag:5,color:0x69523e},
+ {name:'M700',kind:'sniper',rate:900,mag:5,color:0x3d4a53},
+ {name:'MP5',kind:'smg',rate:170,mag:30,color:0x354c5e},
+ {name:'Uzi',kind:'smg',rate:125,mag:32,color:0x4c555b},
  {name:'Cuchillo',kind:'knife',rate:380,color:0xb8c8d0}
 ];
 let player={x:0,z:18};
 let joy={x:0,y:0,id:null},look={id:null,x:0,y:0};
-let bots=[],botMeshes=[],keys={},colliders=[],projectiles=[],playerAvatar=null,avatarLimbs=[];
+let bots=[],botMeshes=[],keys={},colliders=[],projectiles=[],enemyProjectiles=[],playerAvatar=null,avatarLimbs=[];
 let playerHealth=100,recoil=0,walkTime=0,slideTimer=0,slideSpeed=0,weaponKick=0,weaponBob=0;
 const raycaster=new THREE.Raycaster();
 const materials={};
@@ -66,7 +66,7 @@ function addBot(x,z,index){
 }
 function clearWorld(){
  if(worldGroup){scene.remove(worldGroup);worldGroup.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
- worldGroup=new THREE.Group();scene.add(worldGroup);bots=[];colliders=[];projectiles=[];
+ worldGroup=new THREE.Group();scene.add(worldGroup);bots=[];colliders=[];projectiles=[];enemyProjectiles=[];
 }
 function buildWorld(){
  clearWorld();
@@ -124,6 +124,7 @@ function makePlayerAvatar(){
  const pack=new THREE.Mesh(new THREE.BoxGeometry(.48,.58,.2),mat(0x435365));pack.position.set(0,1.35,.22);g.add(pack);
  playerAvatar=g;avatarLimbs=limbs;if(soldierTemplate)applySoldier(g,{});
 }
+function updateEnemyProjectiles(dt){for(let i=enemyProjectiles.length-1;i>=0;i--){const p=enemyProjectiles[i];p.life-=dt;p.mesh.position.addScaledVector(p.dir,p.speed*dt);if(p.mesh.position.distanceTo(new THREE.Vector3(player.x,1.05+jumpOffset,player.z))<.58){hurtPlayer(8);if(p.mesh.parent)p.mesh.parent.remove(p.mesh);p.mesh.geometry.dispose();enemyProjectiles.splice(i,1);continue}if(p.life<=0){if(p.mesh.parent)p.mesh.parent.remove(p.mesh);p.mesh.geometry.dispose();enemyProjectiles.splice(i,1)}}}
 function updateProjectiles(dt){
  for(let i=projectiles.length-1;i>=0;i--){
   const p=projectiles[i],step=Math.min(p.speed*dt,p.remaining),origin=p.mesh.position.clone();
@@ -191,7 +192,7 @@ function enterGame(){
  $('mapTitle').textContent=selectedMap==='desert'?'PIRÁMIDES DEL DESIERTO':selectedMap==='city'?'CIUDAD NEÓN':'ISLA TROPICAL';
  buildWorld();equipWeapon();setMessage('ESCENA 3D ACTIVA · USA VARIOS DEDOS PARA JUGAR');
 }
-function leaveGame(){playing=false;joy.id=null;joy.x=joy.y=0;look.id=null;run=false;crouch=false;fireHeld=false;screen.hidden=true;lobby.hidden=false;$('lobbyHeader').hidden=false;document.body.style.overflow='';}
+function leaveGame(){playing=false;if(reloadTimer){clearTimeout(reloadTimer);reloadTimer=null}reloading=false;joy.id=null;joy.x=joy.y=0;look.id=null;run=false;crouch=false;fireHeld=false;screen.hidden=true;lobby.hidden=false;$('lobbyHeader').hidden=false;document.body.style.overflow='';}
 window.startBloxWorld=enterGame;
 $('playBtn').addEventListener('click',enterGame);
 $('backLobbyBtn').addEventListener('click',leaveGame);
@@ -288,7 +289,7 @@ function animate(){
   if(cameraMode==='third'){camera.position.set(player.x+Math.sin(yaw)*4.2,2.85+jumpOffset+(slideTimer>0?-.55:0),player.z+Math.cos(yaw)*4.2);camera.rotation.order='YXZ';camera.rotation.set(pitch+recoil,yaw,0)}else{camera.position.set(player.x-Math.sin(yaw)*.18,1.62+jumpOffset,player.z-Math.cos(yaw)*.18);camera.rotation.order='YXZ';camera.rotation.set(pitch+recoil,yaw,0)}recoil=Math.max(0,recoil-dt*.24);
   if(weaponGroup){weaponBob=moving?Math.sin(walkTime)*.018:0;weaponKick=Math.max(0,weaponKick-dt*4.5);if(cameraMode==='first'){weaponGroup.position.set(.48,-.43+weaponBob,-.95+weaponKick);weaponGroup.rotation.set(-.08-weaponKick*.55,-.08,Math.sin(walkTime)*.012)}else{weaponGroup.position.y=1.34+weaponBob;weaponGroup.rotation.z=Math.sin(walkTime)*.012}}
   if(inspect>0)inspect=Math.max(0,inspect-dt*1.6);
-  updateBots(dt);updateProjectiles(dt);
+  updateBots(dt);updateProjectiles(dt);updateEnemyProjectiles(dt);
  }
  renderer.render(scene,camera);
 }
