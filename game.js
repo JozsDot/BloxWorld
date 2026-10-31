@@ -24,6 +24,50 @@ const weaponScopes={'AK-47':2,UMP45:1,Kar98k:8,M700:6,MP5:1,Uzi:1,Cuchillo:1};
 let bots=[],botMeshes=[],keys={},colliders=[],projectiles=[],enemyProjectiles=[],playerAvatar=null,avatarLimbs=[];
 let playerHealth=100,recoil=0,walkTime=0,slideTimer=0,slideSpeed=0,weaponKick=0,weaponBob=0;
 const raycaster=new THREE.Raycaster();
+let networkSocket=null,networkRoom='',networkPlayerId='',networkTick=0,pendingOnlineRoom=null;
+const remotePlayers=new Map();
+function makeRemotePlayer(id){
+ const g=new THREE.Group(),color=(parseInt(id.replace(/[^a-f0-9]/gi,'').slice(0,6),16)||0x4b8ba0)&0xffffff;
+ const suit=new THREE.MeshStandardMaterial({color,roughness:.9}),armor=new THREE.MeshStandardMaterial({color:0x253744,roughness:.8}),skin=new THREE.MeshStandardMaterial({color:0xb98263});
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.72,5,8),suit);torso.position.y=1.25;g.add(torso);
+ const vest=new THREE.Mesh(new THREE.BoxGeometry(.62,.58,.3),armor);vest.position.set(0,1.34,-.03);g.add(vest);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),skin);head.position.y=2.02;g.add(head);
+ const helmet=new THREE.Mesh(new THREE.SphereGeometry(.25,12,8,0,Math.PI*2,0,Math.PI*.58),armor);helmet.position.y=2.12;g.add(helmet);
+ const pack=new THREE.Mesh(new THREE.BoxGeometry(.45,.55,.2),armor);pack.position.set(0,1.35,.22);g.add(pack);
+ g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+ worldGroup.add(g);remotePlayers.set(id,g);return g;
+}
+function handleNetworkMessage(data){
+ if(!data||data.playerId===networkPlayerId)return;
+ if(data.type==='state'&&data.player){
+  const p=data.player,g=remotePlayers.get(data.playerId)||makeRemotePlayer(data.playerId);
+  if(Number.isFinite(p.x)&&Number.isFinite(p.z)){g.position.set(p.x,0,p.z);g.rotation.y=Number(p.yaw)||0}
+ }else if(data.type==='leave'){
+  const g=remotePlayers.get(data.playerId);if(g){worldGroup.remove(g);remotePlayers.delete(data.playerId)}
+ }
+}
+function sendNetworkState(){
+ if(!networkSocket||networkSocket.readyState!==WebSocket.OPEN)return;
+ networkSocket.send(JSON.stringify({type:'state',player:{x:player.x,z:player.z,yaw,health:playerHealth,weapon:slots[weaponSlot],aiming}}));
+}
+function connectMultiplayer(room){
+ const base=String(window.BLOXSHOOT_SERVER_URL||'').trim();
+ if(!base){setMessage('SERVIDOR AÚN SIN DESPLEGAR · REVISA SERVER_SETUP.md');return}
+ networkRoom=room;networkPlayerId=crypto.randomUUID();
+ const wsBase=base.replace(/^https:/i,'wss:').replace(/^http:/i,'ws:').replace(/\/$/,'');
+ try{networkSocket=new WebSocket(wsBase+'/room/'+encodeURIComponent(room))}
+ catch(e){setMessage('NO SE PUDO ABRIR LA SALA ONLINE');return}
+ networkSocket.addEventListener('open',()=>{networkSocket.send(JSON.stringify({type:'join',playerId:networkPlayerId}));setMessage('ONLINE · SALA '+room)});
+ networkSocket.addEventListener('message',e=>{try{handleNetworkMessage(JSON.parse(e.data))}catch(err){}});
+ networkSocket.addEventListener('error',()=>setMessage('ERROR DE CONEXIÓN · REVISA EL SERVIDOR'));
+ networkSocket.addEventListener('close',()=>{if(playing)setMessage('CONEXIÓN ONLINE CERRADA')});
+}
+function disconnectMultiplayer(){
+ if(networkSocket){networkSocket.close();networkSocket=null}
+ for(const g of remotePlayers.values())if(g.parent)g.parent.remove(g);
+ remotePlayers.clear();networkRoom='';networkPlayerId='';networkTick=0;
+}
+
 const materials={};
 function mat(color,roughness=1){const key=color+'_'+roughness;if(!materials[key])materials[key]=new THREE.MeshStandardMaterial({color,roughness,metalness:0.02});return materials[key]}
 function box(parent,x,y,z,sx,sy,sz,color){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat(color));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
@@ -96,6 +140,10 @@ function clearWorld(){
  if(worldGroup){scene.remove(worldGroup);worldGroup.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
  worldGroup=new THREE.Group();scene.add(worldGroup);bots=[];colliders=[];projectiles=[];enemyProjectiles=[];
 }
+function addDistantLandmarks(desert,city){
+ const rockMat=mat(desert?0x80634e:city?0x344554:0x47634b),farMat=mat(desert?0xa77d5b:city?0x405568:0x56745c);
+ for(let i=0;i<18;i++){const x=-105+i*12,z=-132-(i%4)*5,h=10+(i%5)*4,r=7+(i%3)*3;const m=new THREE.Mesh(new THREE.ConeGeometry(r,h,7),i%2?rockMat:farMat);m.position.set(x,h*.48,z);m.rotation.z=(i%3-1)*.08;m.castShadow=false;worldGroup.add(m)}
+}
 function buildWorld(){
  clearWorld();
  const desert=selectedMap==='desert',city=selectedMap==='city',sky=desert?0xc9a27d:city?0x647b91:0x86c5c4;
@@ -118,6 +166,7 @@ function buildWorld(){
  }
  for(let i=0;i<30;i++){const x=(Math.random()-.5)*96,z=-10-Math.random()*100,w=1.5+Math.random()*2,d=1.4+Math.random()*2;colliders.push({minX:x-w/2,maxX:x+w/2,minZ:z-d/2,maxZ:z+d/2});box(worldGroup,x,.72,z,w,1.44,d,i%3===0?0x806044:city?0x59636b:0x9a7956);for(let y=.15;y<1.4;y+=.38)box(worldGroup,x,y,z-d/2-.025,w*.9,.045,.05,0x463d32);if(i%4===0)cylinder(worldGroup,x+2,.62,z,.48,.48,1.24,0x5a6268,12)}
  for(let i=0;i<35;i++){const x=(Math.random()-.5)*110,z=-6-Math.random()*110,rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.3+Math.random()*.9,1),mat(desert?0x92704f:city?0x48515a:0x626e50));rock.position.set(x,.18,z);rock.scale.set(1.4,.55,1);rock.rotation.set(Math.random(),Math.random()*3,Math.random());rock.castShadow=true;worldGroup.add(rock)}
+ addDistantLandmarks(desert,city);
  const pts=desert?[[-8,-17],[8,-27],[-17,-36],[18,-46],[0,-56],[31,-42]]:city?[[-13,-19],[14,-29],[-22,-44],[23,-51],[0,-68],[34,-78]]:[[-14,-18],[14,-24],[-22,-40],[20,-48],[0,-60],[34,-75]];
  pts.forEach((p,i)=>addBot(p[0],p[1],i));worldGroup.add(new THREE.AmbientLight(0xffffff,.22));
 }
@@ -264,6 +313,7 @@ function attachWeaponOptic(group,name){
 }
 function updateAimView(){
  if(!camera)return;
+ const aimButton=$('aimBtn');if(aimButton)aimButton.classList.toggle('active',aiming);
  const zoom=aiming?(weaponScopes[slots[weaponSlot]]||1):1;
  scopeZoom=zoom;camera.fov=baseFov/zoom;camera.updateProjectionMatrix();
  const overlay=$('scopeOverlay');if(overlay)overlay.classList.toggle('visible',aiming&&zoom>1);
@@ -272,6 +322,7 @@ function updateAimView(){
 }
 function toggleAim(){
  if(!playing)return;
+ $('aimBtn').classList.toggle('active',!aiming);
  aiming=!aiming;
  if(aiming){aimReturnMode=cameraMode;cameraMode='first';equipWeapon()}
  else{cameraMode=aimReturnMode;equipWeapon()}
@@ -289,25 +340,28 @@ function init3D(){
  if(!window.THREE){setMessage('No se pudo cargar el motor 3D. Revisa tu conexión e inténtalo otra vez.');return false}
  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(baseFov,innerWidth/innerHeight,.1,360);
  renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
- renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));renderer.setSize(innerWidth,innerHeight,false);
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.45));renderer.setSize(innerWidth,innerHeight,false);
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=true;renderer.shadowMap.needsUpdate=true;
- renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;
  camera.position.set(0,3.9,22);scene.add(camera);makePlayerAvatar();
  clock=new THREE.Clock();buildWorld();equipWeapon();loadGameAssets();
  window.addEventListener('resize',resize);
  return true;
 }
 function enterGame(){
+ disconnectMultiplayer();
  aiming=false;cameraMode='third';updateAimView();
  $('lobbyHeader').hidden=true;lobby.hidden=true;screen.hidden=false;document.body.style.overflow='hidden';
  if(!renderer&&!init3D()){return}
  playing=true;run=false;crouch=false;jumpV=0;jumpOffset=0;playerY=1.7;yaw=0;pitch=0;player={x:0,z:18};playerHealth=100;$('healthValue').textContent='100';camera.position.set(0,3.9,22);camera.rotation.set(0,0,0);if(playerAvatar)playerAvatar.position.set(0,0,18);weaponSlot=0;equipWeapon();updateCoins();
  $('mapTitle').textContent=selectedMap==='desert'?'PIRÁMIDES DEL DESIERTO':selectedMap==='city'?'CIUDAD NEÓN':'ISLA TROPICAL';
- buildWorld();equipWeapon();setMessage('ESCENA 3D ACTIVA · USA VARIOS DEDOS PARA JUGAR');
+ buildWorld();equipWeapon();setMessage(pendingOnlineRoom?'CONECTANDO A SALA '+pendingOnlineRoom:'ESCENA 3D ACTIVA · USA VARIOS DEDOS PARA JUGAR');
+ if(pendingOnlineRoom){connectMultiplayer(pendingOnlineRoom);pendingOnlineRoom=null}
 }
-function leaveGame(){aiming=false;updateAimView();activeTouches.clear();playing=false;if(reloadTimer){clearTimeout(reloadTimer);reloadTimer=null}reloading=false;joy.id=null;joy.x=joy.y=0;look.id=null;run=false;crouch=false;fireHeld=false;screen.hidden=true;lobby.hidden=false;$('lobbyHeader').hidden=false;document.body.style.overflow='';}
+function leaveGame(){disconnectMultiplayer();aiming=false;updateAimView();activeTouches.clear();playing=false;if(reloadTimer){clearTimeout(reloadTimer);reloadTimer=null}reloading=false;joy.id=null;joy.x=joy.y=0;look.id=null;run=false;crouch=false;fireHeld=false;screen.hidden=true;lobby.hidden=false;$('lobbyHeader').hidden=false;document.body.style.overflow='';}
 window.startBloxWorld=enterGame;
 $('playBtn').addEventListener('click',enterGame);
+$('onlinePlayBtn').addEventListener('click',()=>{const room=(prompt('Escribe un código de sala (por ejemplo ARENA01):')||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,16);if(!room)return;pendingOnlineRoom=room;enterGame()});
 $('backLobbyBtn').addEventListener('click',leaveGame);
 $('shopOpen').addEventListener('click',()=>$('shopModal').hidden=false);
 $('shopClose').addEventListener('click',()=>$('shopModal').hidden=true);
@@ -426,6 +480,7 @@ function animate(){
  requestAnimationFrame(animate);if(!renderer||!scene)return;const dt=Math.min(clock.getDelta(),.04);
  if(playing){
   if(fireHeld)shoot();
+  networkTick+=dt;if(networkTick>=.1){networkTick=0;sendNetworkState()}
   let f=-joy.y,s=joy.x;
   if(keys.w||keys.arrowup)f=1;if(keys.s||keys.arrowdown)f=-1;if(keys.a||keys.arrowleft)s=-1;if(keys.d||keys.arrowright)s=1;
   const len=Math.hypot(f,s)||1;if(len>1){f/=len;s/=len}
