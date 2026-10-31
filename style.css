@@ -273,3 +273,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
  body{overscroll-behavior:none}
  #gameScreen{height:100dvh;min-height:100dvh}
 }
+
+
+/* V27 · Selector de modos */
+.mode-picker{margin:12px 0;padding:17px;border:1px solid #344760;border-radius:16px;background:linear-gradient(145deg,#19283d,#101a2b)}.mode-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.mode-option{min-width:0;min-height:76px;padding:12px;border:1px solid #40536d;border-radius:12px;background:#111d2e;color:#edf7ff;text-align:left;display:flex;flex-direction:column;justify-content:center;gap:7px}.mode-option b{font-size:10px;letter-spacing:.7px}.mode-option small{font-size:8px;color:#9db0c7}.mode-option.selected{border-color:#7ce9f6;box-shadow:0 0 0 1px #7ce9f655,inset 0 0 22px #4ac6dd16;background:#19334a}.mode-note{margin:9px 2px 0;color:#8fa6c1;font-size:8px;line-height:1.5;letter-spacing:.45px}@media(max-width:600px){.mode-picker{padding:12px}.mode-options{gap:6px}.mode-option{padding:9px;min-height:70px}.mode-option b{font-size:8px}.mode-option small{font-size:7px}}
