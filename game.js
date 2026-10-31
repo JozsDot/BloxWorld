@@ -23,6 +23,7 @@ let joy={x:0,y:0,id:null},look={id:null,x:0,y:0},activeTouches=new Map();
 const weaponScopes={'AK-47':2,UMP45:1,Kar98k:8,M700:6,MP5:1,Uzi:1,Cuchillo:1};
 let bots=[],botMeshes=[],keys={},colliders=[],projectiles=[],enemyProjectiles=[],playerAvatar=null,avatarLimbs=[];
 let playerHealth=100,playerShield=0,recoil=0,walkTime=0,slideTimer=0,slideSpeed=0,weaponKick=0,weaponBob=0;
+const controlSettings={look:1,aim:1,scope:1,quality:'high',gyro:false,hudEdit:false};let gyroLast=null,gyroHandler=null;
 const raycaster=new THREE.Raycaster();
 let networkSocket=null,networkRoom='',networkPlayerId='',networkTick=0,pendingOnlineRoom=null;
 const remotePlayers=new Map();
@@ -497,6 +498,16 @@ function init3D(){
  window.addEventListener('resize',resize);
  return true;
 }
+function qualityPixelRatio(){return controlSettings.quality==='low'?.75:controlSettings.quality==='medium'?1:controlSettings.quality==='ultra'?Math.min(devicePixelRatio||1,2):Math.min(devicePixelRatio||1,1.35)}
+function applyQuality(){if(!renderer)return;const q=controlSettings.quality;renderer.setPixelRatio(qualityPixelRatio());renderer.setSize(innerWidth,innerHeight,false);renderer.shadowMap.enabled=q==='high'||q==='ultra';renderer.shadowMap.needsUpdate=true}
+function loadControlSettings(){try{const saved=JSON.parse(localStorage.getItem('bloxshoot-controls')||'{}');Object.assign(controlSettings,saved);if(!['low','medium','high','ultra'].includes(controlSettings.quality))controlSettings.quality='high'}catch(e){};[['look','lookSensitivity'],['aim','aimSensitivity'],['scope','scopeSensitivity']].forEach(([k,id])=>{if($(id))$(id).value=controlSettings[k]});if($('qualitySelect'))$('qualitySelect').value=controlSettings.quality;if($('gyroToggle'))$('gyroToggle').checked=!!controlSettings.gyro}
+function saveControlSettings(){try{localStorage.setItem('bloxshoot-controls',JSON.stringify(controlSettings))}catch(e){}}
+function setupGyroscope(){if(!controlSettings.gyro)return;gyroHandler=e=>{if(!playing||!Number.isFinite(e.beta)||!Number.isFinite(e.gamma))return;const cur={beta:e.beta,gamma:e.gamma};if(gyroLast){let dx=cur.gamma-gyroLast.gamma,dy=cur.beta-gyroLast.beta;if(dx>180)dx-=360;if(dx< -180)dx+=360;if(dy>180)dy-=360;if(dy< -180)dy+=360;const f=.00085*controlSettings.scope;yaw-=dx*f;pitch=Math.max(-.95,Math.min(.95,pitch+dy*f))}gyroLast=cur};window.addEventListener('deviceorientation',gyroHandler,true)}
+function stopGyroscope(){if(gyroHandler)window.removeEventListener('deviceorientation',gyroHandler,true);gyroHandler=null;gyroLast=null}
+async function enableGyroscope(){try{if(typeof DeviceOrientationEvent==='undefined')throw new Error('unsupported');if(typeof DeviceOrientationEvent.requestPermission==='function'){const p=await DeviceOrientationEvent.requestPermission();if(p!=='granted')throw new Error('denied')}controlSettings.gyro=true;gyroLast=null;setupGyroscope();saveControlSettings();setMessage('GIROSCOPIO ACTIVADO')}catch(e){controlSettings.gyro=false;$('gyroToggle').checked=false;saveControlSettings();setMessage('NO SE PUDO ACTIVAR EL GIROSCOPIO')}}
+function applyHudPositions(){['joystickWrap','actionHud','weaponTools','aimBtn','lootBtn','arsenalBtn','reloadBtn','inspectBtn','switchBtn','cameraBtn'].forEach(id=>{const el=$(id);if(!el)return;try{const p=JSON.parse(localStorage.getItem('blox-hud-'+id)||'null');if(p)el.style.translate=p.x+'px '+p.y+'px'}catch(e){}})}
+function setHudEdit(v){controlSettings.hudEdit=v;screen.classList.toggle('hud-edit-mode',v);$('hudEditBtn').textContent=v?'GUARDAR POSICIONES':'MOVER BOTONES'}
+function installHudEditor(){const sel='#joystickWrap,#actionHud,#weaponTools,#aimBtn,#lootBtn,#arsenalBtn,#reloadBtn,#inspectBtn,#switchBtn,#cameraBtn';let active=null;screen.addEventListener('pointerdown',e=>{if(!controlSettings.hudEdit)return;const el=e.target.closest(sel);if(!el)return;e.preventDefault();e.stopImmediatePropagation();const id=el.id||el.dataset.hudId||el.className.split(' ')[0];el.dataset.hudId=id;const old=(el.style.translate||'0px 0px').split(' ');active={el,id,pointer:e.pointerId,x:e.clientX,y:e.clientY,dx:parseFloat(old[0])||0,dy:parseFloat(old[1])||0,next:null}},true);screen.addEventListener('pointermove',e=>{if(!active||e.pointerId!==active.pointer)return;e.preventDefault();e.stopImmediatePropagation();const p={x:active.dx+e.clientX-active.x,y:active.dy+e.clientY-active.y};active.el.style.translate=p.x+'px '+p.y+'px';active.next=p},true);const end=e=>{if(!active||e.pointerId!==active.pointer)return;try{localStorage.setItem('blox-hud-'+active.id,JSON.stringify(active.next||{x:active.dx,y:active.dy}))}catch(err){}active=null};screen.addEventListener('pointerup',end,true);screen.addEventListener('pointercancel',end,true)}
 function enterGame(){
  disconnectMultiplayer();
  aiming=false;cameraMode='third';updateAimView();
@@ -505,11 +516,16 @@ function enterGame(){
  playing=true;run=false;crouch=false;jumpV=0;jumpOffset=0;playerY=1.7;yaw=0;pitch=0;slots[0]='Cuchillo';slots[1]='Cuchillo';Object.keys(ammoState).forEach(n=>{ammoState[n]={mag:0,reserve:0}});weaponSlot=0;player={x:0,z:18};playerHealth=100;playerShield=0;updateVitalsHud();camera.position.set(0,3.9,22);camera.rotation.set(0,0,0);if(playerAvatar)playerAvatar.position.set(0,0,18);weaponSlot=0;equipWeapon();updateCoins();
  $('lootBtn').hidden=true;renderInventoryPanel();$('mapTitle').textContent=selectedMap==='desert'?'PIRÁMIDES DEL DESIERTO':selectedMap==='city'?'CIUDAD NEÓN':'ISLA TROPICAL';
  $('matchModeLabel').textContent=selectedGameMode==='battle'?'BATTLE ROYALE · PROTOTIPO':'COMBATE POR EQUIPOS · PROTOTIPO';
- buildWorld();equipWeapon();setMessage(pendingOnlineRoom?'CONECTANDO A SALA '+pendingOnlineRoom:'ESCENA 3D ACTIVA · USA VARIOS DEDOS PARA JUGAR');
+ buildWorld();equipWeapon();applyHudPositions();if(controlSettings.gyro)setupGyroscope();setMessage(pendingOnlineRoom?'CONECTANDO A SALA '+pendingOnlineRoom:'ESCENA 3D ACTIVA · USA VARIOS DEDOS PARA JUGAR');
  if(pendingOnlineRoom){connectMultiplayer(pendingOnlineRoom);pendingOnlineRoom=null}
 }
-function leaveGame(){disconnectMultiplayer();if($('lootBtn'))$('lootBtn').hidden=true;aiming=false;updateAimView();activeTouches.clear();playing=false;if(reloadTimer){clearTimeout(reloadTimer);reloadTimer=null}reloading=false;joy.id=null;joy.x=joy.y=0;look.id=null;run=false;crouch=false;fireHeld=false;screen.hidden=true;lobby.hidden=false;$('lobbyHeader').hidden=false;document.body.style.overflow='';}
+function leaveGame(){stopGyroscope();disconnectMultiplayer();if($('lootBtn'))$('lootBtn').hidden=true;aiming=false;updateAimView();activeTouches.clear();playing=false;if(reloadTimer){clearTimeout(reloadTimer);reloadTimer=null}reloading=false;joy.id=null;joy.x=joy.y=0;look.id=null;run=false;crouch=false;fireHeld=false;screen.hidden=true;lobby.hidden=false;$('lobbyHeader').hidden=false;document.body.style.overflow='';}
 window.startBloxWorld=enterGame;
+loadControlSettings();installHudEditor();
+$('settingsOpen').addEventListener('click',()=>{$('settingsModal').hidden=false});$('settingsClose').addEventListener('click',()=>{$('settingsModal').hidden=true});$('settingsModal').addEventListener('click',e=>{if(e.target===$('settingsModal'))$('settingsModal').hidden=true});
+[['look','lookSensitivity'],['aim','aimSensitivity'],['scope','scopeSensitivity']].forEach(([k,id])=>{$(id).addEventListener('input',e=>{controlSettings[k]=Number(e.target.value);$(id+'Value').textContent=controlSettings[k].toFixed(2)+'×';saveControlSettings()});$(id+'Value').textContent=Number($(id).value).toFixed(2)+'×'});
+$('qualitySelect').addEventListener('change',e=>{controlSettings.quality=e.target.value;saveControlSettings();applyQuality()});$('gyroToggle').addEventListener('change',e=>{if(e.target.checked)enableGyroscope();else{controlSettings.gyro=false;stopGyroscope();saveControlSettings()}});
+$('hudEditBtn').addEventListener('click',()=>setHudEdit(!controlSettings.hudEdit));$('hudResetBtn').addEventListener('click',()=>{['joystickWrap','actionHud','weaponTools','aimBtn','lootBtn','arsenalBtn','reloadBtn','inspectBtn','switchBtn','cameraBtn'].forEach(id=>{try{localStorage.removeItem('blox-hud-'+id)}catch(e){}const el=$(id);if(el)el.style.translate='none'});setHudEdit(false)});
 $('playBtn').addEventListener('click',enterGame);
 $('onlinePlayBtn').addEventListener('click',()=>{const room=(prompt('Escribe un código de sala (por ejemplo ARENA01):')||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,16);if(!room)return;pendingOnlineRoom=room;enterGame()});
 $('backLobbyBtn').addEventListener('click',leaveGame);
@@ -539,7 +555,7 @@ canvas.addEventListener('pointerdown',e=>{if(!playing||e.pointerType==='mouse')r
 window.addEventListener('pointermove',e=>{
  const role=activeTouches.get(e.pointerId);
  if(role==='move'&&e.pointerId===joy.id)joyMove(e);
- if(role==='look'){const dx=e.clientX-look.x,dy=e.clientY-look.y;look.x=e.clientX;look.y=e.clientY;const sensitivity=aiming?.0026:.0052;yaw-=dx*sensitivity;pitch=Math.max(-.95,Math.min(.95,pitch-dy*sensitivity*.78))}
+ if(role==='look'){const dx=e.clientX-look.x,dy=e.clientY-look.y;look.x=e.clientX;look.y=e.clientY;const sensitivity=aiming?.0026*controlSettings.aim:.0052*controlSettings.look;yaw-=dx*sensitivity;pitch=Math.max(-.95,Math.min(.95,pitch-dy*sensitivity*.78))}
 },{passive:false});
 function endTouch(e){
  const role=activeTouches.get(e.pointerId);if(!role)return;
