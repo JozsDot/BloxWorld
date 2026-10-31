@@ -102,7 +102,32 @@ async function loadGameAssets(){
   for(const [key,url] of Object.entries(assets))loader.load(url,g=>{weaponTemplates[key]=g.scene;if(slots[weaponSlot]&&weaponAssetKey(slots[weaponSlot])===key)equipWeapon()},undefined,e=>console.warn('Weapon asset unavailable: '+key,e));
  }catch(e){console.warn('3D asset loader unavailable',e)}
 }
-function applySoldier(target,entity){if(!soldierTemplate)return;const model=skeletonClone?skeletonClone(soldierTemplate):soldierTemplate.clone(true),bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3()),scale=2.05/Math.max(size.y,.01);model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);target.clear();target.add(model);entity.mixer=new THREE.AnimationMixer(model);entity.actions={};target.userData.mixer=entity.mixer;target.userData.actions=entity.actions;for(const clip of soldierAnimations)entity.actions[clip.name.toLowerCase()]=entity.mixer.clipAction(clip);const idle=Object.keys(entity.actions).find(n=>n.includes('idle'))||Object.keys(entity.actions)[0];if(idle)entity.actions[idle].play();entity.currentAction=idle;target.userData.currentAction=idle;if(target===playerAvatar&&weaponGroup&&cameraMode==='third'){target.add(weaponGroup);weaponGroup.position.set(.42,1.34,-.28);weaponGroup.rotation.y=Math.PI;weaponGroup.scale.setScalar(.68)}}
+function addTacticalGear(target){
+ const gear=new THREE.Group();
+ const armor=new THREE.MeshStandardMaterial({color:0x273a3b,roughness:.92,metalness:.04});
+ const fabric=new THREE.MeshStandardMaterial({color:0x465247,roughness:1});
+ const dark=new THREE.MeshStandardMaterial({color:0x182329,roughness:.8});
+ const metal=new THREE.MeshStandardMaterial({color:0x8c9891,metalness:.55,roughness:.42});
+ const part=(geo,material,x,y,z,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;gear.add(m);return m};
+ part(new THREE.BoxGeometry(.62,.64,.27),armor,0,1.3,-.12);
+ part(new THREE.BoxGeometry(.68,.12,.3),fabric,0,1.63,-.1);
+ part(new THREE.BoxGeometry(.11,.58,.1),fabric,-.24,1.31,-.25);
+ part(new THREE.BoxGeometry(.11,.58,.1),fabric,.24,1.31,-.25);
+ for(let x of [-.2,0,.2]){
+  part(new THREE.BoxGeometry(.16,.2,.12),fabric,x,1.18,-.285);
+  part(new THREE.BoxGeometry(.16,.06,.13),dark,x,1.29,-.29);
+ }
+ part(new THREE.BoxGeometry(.12,.24,.12),dark,.37,1.46,-.02);
+ part(new THREE.BoxGeometry(.1,.16,.08),metal,.37,1.49,-.09);
+ for(let x of [-.19,.19]){
+  part(new THREE.BoxGeometry(.27,.18,.24),armor,x,.56,-.08);
+  part(new THREE.BoxGeometry(.12,.1,.16),dark,x,.49,-.16);
+ }
+ part(new THREE.BoxGeometry(.46,.54,.22),fabric,0,1.32,.22);
+ part(new THREE.BoxGeometry(.3,.06,.24),dark,0,1.59,.22);
+ target.add(gear);
+}
+function applySoldier(target,entity){if(!soldierTemplate)return;const model=skeletonClone?skeletonClone(soldierTemplate):soldierTemplate.clone(true),bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3()),scale=2.05/Math.max(size.y,.01);model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);target.clear();target.add(model);addTacticalGear(target);entity.mixer=new THREE.AnimationMixer(model);entity.actions={};target.userData.mixer=entity.mixer;target.userData.actions=entity.actions;for(const clip of soldierAnimations)entity.actions[clip.name.toLowerCase()]=entity.mixer.clipAction(clip);const idle=Object.keys(entity.actions).find(n=>n.includes('idle'))||Object.keys(entity.actions)[0];if(idle)entity.actions[idle].play();entity.currentAction=idle;target.userData.currentAction=idle;if(target===playerAvatar&&weaponGroup&&cameraMode==='third'){target.add(weaponGroup);weaponGroup.position.set(.42,1.34,-.28);weaponGroup.rotation.y=Math.PI;weaponGroup.scale.setScalar(.68)}}
 function setSoldierAction(entity,kind){
  if(!entity.actions)return;
  const key=Object.keys(entity.actions).find(n=>n===kind||n.includes(kind));
