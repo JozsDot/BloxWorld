@@ -48,6 +48,8 @@ $('runBtn').addEventListener('click',()=>{run=!run;$('runBtn').classList.toggle(
 $('crouchBtn').addEventListener('click',()=>{crouch=!crouch;$('crouchBtn').classList.toggle('active',crouch);if(crouch){run=false;$('runBtn').classList.remove('active')}});
 $('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(playing&&jumpPower<=0.02){jumpVelocity=4.8;$('jumpBtn').classList.add('active');setTimeout(()=>$('jumpBtn').classList.remove('active'),180)}});
 $('switchBtn').addEventListener('click',()=>{weaponSlot=1-weaponSlot;updateWeaponHud();setMessage('Arma equipada: '+currentWeapon().name)});
+$('arsenalBtn').addEventListener('click',()=>{$('arsenalPanel').hidden=!$('arsenalPanel').hidden});$('arsenalClose').addEventListener('click',()=>$('arsenalPanel').hidden=true);
+document.querySelectorAll('.equip-weapon').forEach(btn=>btn.addEventListener('click',()=>{weaponSlots[weaponSlot]=weaponPool[Number(btn.dataset.weapon)];updateWeaponHud();$('arsenalPanel').hidden=true;setMessage(weaponSlots[weaponSlot].name+' equipado en espacio '+(weaponSlot+1))}));
 $('inspectBtn').addEventListener('click',()=>{inspectTime=1;setMessage('Inspeccionando '+currentWeapon().name)});
 document.querySelectorAll('.map-option').forEach(btn=>btn.addEventListener('click',()=>{selectedMap=btn.dataset.map;document.querySelectorAll('.map-option').forEach(b=>b.classList.toggle('selected',b===btn));const names={desert:'PIRÁMIDES DEL DESIERTO',city:'CIUDAD NEÓN',island:'ISLA TROPICAL'};$('lobbyMapName').textContent=names[selectedMap];$('lobbyMapNumber').textContent=selectedMap==='desert'?'01':selectedMap==='city'?'02':'03';}));
 $('shootBtn').addEventListener('pointerdown',e=>{e.preventDefault();shoot()});
