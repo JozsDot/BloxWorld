@@ -122,3 +122,31 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 
 .arsenal-panel{position:absolute;z-index:8;right:12px;bottom:calc(env(safe-area-inset-bottom) + 265px);width:min(330px,calc(100% - 24px));padding:13px;border:1px solid #b8d8ef66;border-radius:14px;background:#0b1728ed;box-shadow:0 12px 35px #0009;backdrop-filter:blur(10px)}.arsenal-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}.arsenal-head b{font-size:11px;letter-spacing:1px;color:#a8f1ff}.arsenal-head small{flex:1;font-size:7px;color:#9db0c7}.arsenal-head button{border:0;background:transparent;font-size:22px}.arsenal-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.equip-weapon{padding:9px;border:1px solid #40536d;border-radius:8px;background:#1b2b40;text-align:left;font-size:10px;font-weight:900}.equip-weapon small{display:block;margin-top:3px;font-size:7px;color:#91a9c2}.equip-weapon:active{border-color:#8be9ff;background:#24445b}
 @media(max-width:600px){.weapon-tools{right:8px;gap:4px}.tool-button{min-width:50px;padding:6px 5px}.tool-button small{font-size:5px}.arsenal-panel{right:8px;bottom:calc(env(safe-area-inset-bottom) + 250px)}}
+
+
+/* Controles táctiles reforzados y modo horizontal */
+.game-screen,.game-screen button,#game{touch-action:none}
+.touch-hud,.weapon-tools{z-index:6}
+.weapon-tools{top:calc(env(safe-area-inset-top) + 76px);bottom:auto;right:12px}
+#switchBtn{min-width:76px;min-height:54px;border:1px solid #8cf2ff;background:linear-gradient(145deg,#17647aee,#172e50ee);box-shadow:0 0 0 2px #6deaff33,0 6px 18px #0008}
+#switchBtn b{font-size:23px;color:#c5f8ff}
+#switchBtn small{font-size:8px;color:#fff}
+.rotate-hint{display:none;position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);padding:12px 16px;border:1px solid #ffffff55;border-radius:12px;background:#071323d9;color:#fff;font-size:10px;font-weight:900;letter-spacing:1px;text-align:center;pointer-events:none}
+@media(orientation:portrait) and (max-width:900px){
+ .rotate-hint{display:block;top:calc(env(safe-area-inset-top) + 118px);font-size:8px;padding:7px 10px;opacity:.82}
+}
+@media(orientation:landscape){
+ .game-top-hud{padding-top:calc(env(safe-area-inset-top) + 5px);padding-bottom:5px}
+ .combat-status{top:calc(env(safe-area-inset-top) + 52px)}
+ .game-message{top:calc(env(safe-area-inset-top) + 48px)}
+ .weapon-tools{top:calc(env(safe-area-inset-top) + 52px);right:12px;gap:5px}
+ .tool-button{min-width:58px;padding:5px 7px}
+ .touch-hud{bottom:calc(env(safe-area-inset-bottom) + 5px);padding:0 15px}
+ .joystick{width:102px;height:102px}
+ .joystick-thumb{width:43px;height:43px}
+ .round-action{width:47px;height:47px}
+ .fire-button{width:66px;height:66px}
+ .weapon-hud{right:15px;bottom:calc(env(safe-area-inset-bottom) + 78px)}
+ .arsenal-panel{top:calc(env(safe-area-inset-top) + 105px);bottom:auto;right:12px}
+ .look-hint{top:calc(env(safe-area-inset-top) + 58px);right:12px}
+}
