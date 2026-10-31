@@ -267,3 +267,9 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .scope-lens b{z-index:3;padding:4px 7px;border-radius:6px;background:#07131dbb;border:1px solid #dce8df55}
 .weapon-hud{backdrop-filter:blur(16px)}
 .game-message{backdrop-filter:blur(14px)}
+
+/* V26 · HUD móvil en modo aplicación instalada */
+@media (display-mode: standalone){
+ body{overscroll-behavior:none}
+ #gameScreen{height:100dvh;min-height:100dvh}
+}
