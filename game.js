@@ -59,7 +59,7 @@ canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!=
 canvas.addEventListener('pointermove',e=>{
  if(lookPointer!==e.pointerId)return;
  const dx=e.clientX-lastLookX,dy=e.clientY-lastLookY;lastLookX=e.clientX;lastLookY=e.clientY;
- player.yaw-=dx*.006;player.pitch=Math.max(-.38,Math.min(.38,player.pitch+dy*.003));
+ player.yaw-=dx*.006;player.pitch=Math.max(-.38,Math.min(.38,player.pitch-dy*.003));
 });
 function stopLook(e){if(lookPointer===e.pointerId)lookPointer=null}
 ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>canvas.addEventListener(ev,stopLook));
